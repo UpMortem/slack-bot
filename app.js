@@ -5,10 +5,10 @@ const cookieParser = require("cookie-parser");
 const logger = require("morgan");
 
 // Slack websocket
-require("./src/slack/index");
+require("./src/lib/slack/index");
 
 // OpenAI
-// require("./src/openai/index");
+// require("./src/lib/openai/index");
 
 // Init app
 const app = express();
