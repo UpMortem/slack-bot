@@ -7,6 +7,9 @@ const logger = require("morgan");
 // Slack websocket
 require("./src/slack/index");
 
+// OpenAI
+// require("./src/openai/index");
+
 // Init app
 const app = express();
 

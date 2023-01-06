@@ -4,50 +4,47 @@ const { App } = require("@slack/bolt");
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
   signingSecret: process.env.SLACK_SIGNING_SECRET,
-  appToken: process.env.SLACK_APP_TOKEN,
-  socketMode: true,
-});
-
-// subscribe to 'app_mention' event in your App config
-// need app_mentions:read and chat:write scopes
-// slack bolt recieves app_mention event and responds with a message
-app.event("app_mention", async ({ event, say }) => {
-  console.log("daskfjsdlkfhkjfghsdfkjg");
-  console.log(event);
-  await say(`Hey there <@${event.user}>!`);
-
-  try {
-    await say({
-      blocks: [
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: `Thanks for the mention <@${event.user}>! Here's a button`,
-          },
-          accessory: {
-            type: "button",
-            text: {
-              type: "plain_text",
-              text: "Button",
-              emoji: true,
-            },
-            value: "click_me_123",
-            action_id: "first_button",
-          },
-        },
-      ],
-    });
-  } catch (error) {
-    console.error(error);
-  }
+  // appToken: process.env.SLACK_APP_TOKEN,
+  // socketMode: true,
 });
 
 // Start your app
 (async () => {
   // Start the app
   await app.start(3001);
-  console.log("⚡️ Haly is running MFers!");
+  console.log("⚡️ Haly is running!");
 })();
 
-module.exports = app;
+// Publish a message to a channel
+// need chat:write scope
+const sendMessage = async (channel, text) => {
+  try {
+    const result = await app.client.chat.postMessage({
+      token: process.env.SLACK_BOT_TOKEN,
+      channel,
+      text,
+    });
+    return result;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+// Call the users.info method using the WebClient
+const findUserById = async (userId) => {
+  try {
+    const result = await app.client.users.info({
+      user: userId,
+    });
+
+    return result;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const command = (text) => {
+  return `You said: ${text}`;
+};
+
+module.exports = { findUserById, sendMessage, command };
