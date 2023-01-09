@@ -1,28 +1,38 @@
 const { App } = require("@slack/bolt");
 
-// Initializes your app
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
   signingSecret: process.env.SLACK_SIGNING_SECRET,
-  // appToken: process.env.SLACK_APP_TOKEN,
-  // socketMode: true,
 });
 
-// Start your app
 (async () => {
-  // Start the app
   await app.start(3001);
   console.log("⚡️ Haly is running!");
 })();
 
 // Publish a message to a channel
 // need chat:write scope
-const sendMessage = async (channel, text) => {
+const sendMessage = async (channel, threadTs, text) => {
   try {
     const result = await app.client.chat.postMessage({
       token: process.env.SLACK_BOT_TOKEN,
       channel,
       text,
+      thread_ts: threadTs,
+    });
+    return result;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const getThreadMessages = async (channel, threadTs) => {
+  try {
+    const result = await app.client.conversations.replies({
+      token: process.env.SLACK_BOT_TOKEN,
+      channel,
+      ts: threadTs,
+      include_all_metadata: true
     });
     return result;
   } catch (error) {
@@ -47,4 +57,4 @@ const command = (text) => {
   return `You said: ${text}`;
 };
 
-module.exports = { findUserById, sendMessage, command };
+module.exports = { findUserById, sendMessage, command, getThreadMessages };
