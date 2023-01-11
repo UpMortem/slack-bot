@@ -1,4 +1,4 @@
-const { App } = require("@slack/bolt");
+import { App } from "@slack/bolt"
 
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
@@ -12,7 +12,7 @@ const app = new App({
 
 // Publish a message to a channel
 // need chat:write scope
-const sendMessage = async (channel, threadTs, text) => {
+export const sendMessage = async (channel: string, threadTs: string, text: string) => {
   try {
     const result = await app.client.chat.postMessage({
       token: process.env.SLACK_BOT_TOKEN,
@@ -26,7 +26,7 @@ const sendMessage = async (channel, threadTs, text) => {
   }
 };
 
-const getThreadMessages = async (channel, threadTs) => {
+export const getThreadMessages = async (channel: string, threadTs: string) => {
   try {
     const result = await app.client.conversations.replies({
       token: process.env.SLACK_BOT_TOKEN,
@@ -41,7 +41,7 @@ const getThreadMessages = async (channel, threadTs) => {
 };
 
 // Call the users.info method using the WebClient
-const findUserById = async (userId) => {
+export const findUserById = async (userId: string) => {
   try {
     const result = await app.client.users.info({
       user: userId,
@@ -53,8 +53,6 @@ const findUserById = async (userId) => {
   }
 };
 
-const command = (text) => {
+export const command = (text) => {
   return `You said: ${text}`;
 };
-
-module.exports = { findUserById, sendMessage, command, getThreadMessages };
