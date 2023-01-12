@@ -1,4 +1,4 @@
-import { App } from "@slack/bolt"
+import { App } from "@slack/bolt";
 
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
@@ -12,15 +12,18 @@ const app = new App({
 
 // Publish a message to a channel
 // need chat:write scope
-export const sendMessage = async (channel: string, threadTs: string, text: string) => {
+export const sendMessage = async (
+  channel: string,
+  threadTs: string,
+  text: string
+) => {
   try {
-    const result = await app.client.chat.postMessage({
+    await app.client.chat.postMessage({
       token: process.env.SLACK_BOT_TOKEN,
       channel,
       text,
       thread_ts: threadTs,
     });
-    return result;
   } catch (error) {
     console.error(error);
   }
@@ -32,9 +35,9 @@ export const getThreadMessages = async (channel: string, threadTs: string) => {
       token: process.env.SLACK_BOT_TOKEN,
       channel,
       ts: threadTs,
-      include_all_metadata: true
+      include_all_metadata: true,
     });
-    return result;
+    return result.messages;
   } catch (error) {
     console.error(error);
   }
