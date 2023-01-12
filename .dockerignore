@@ -1,0 +1,5 @@
+README.md
+tslint.json
+.github/*
+.env
+Dockerfile

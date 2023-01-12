@@ -3,3 +3,4 @@ node_modules
 .env
 # Ignore built ts files
 dist/**/*
+gha-creds-*.json
