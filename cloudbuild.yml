@@ -1,8 +1,8 @@
 steps:
 - name: 'gcr.io/cloud-builders/docker'
-  args: [ 'build', '-t', 'us-docker.pkg.dev/$PROJECT_ID/slack-bot/haly:$SHORT_HASH-dev', '.' ]
+  args: [ 'build', '-t', 'us-docker.pkg.dev/$PROJECT_ID/slack-bot/haly:$SHORT_SHA-dev', '.' ]
 images:
-- 'us-docker.pkg.dev/$PROJECT_ID/slack-bot/haly:$SHORT_HASH-dev'
+- 'us-docker.pkg.dev/$PROJECT_ID/slack-bot/haly:$SHORT_SHA-dev'
 
 options:
   logging: CLOUD_LOGGING_ONLY
