@@ -3,3 +3,5 @@ steps:
   args: [ 'build', '-t', 'us-docker.pkg.dev/$PROJECT_ID/slack-bot/haly:latest', '.' ]
 images:
 - 'us-docker.pkg.dev/$PROJECT_ID/slack-bot/haly:latest'
+options:
+  logging: CLOUD_LOGGING_ONLY
