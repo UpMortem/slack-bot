@@ -1,7 +1,7 @@
 steps:
 # Build container in Cloud Build
 - name: 'gcr.io/cloud-builders/docker'
-  args: [ 'build', '-t', 'us-docker.pkg.dev/$PROJECT_ID/slack-bot/haly:$SHORT_SHA-dev', '--format=docker', '--remove-signatures', '.' ]
+  args: [ 'build', '-t', 'us-docker.pkg.dev/$PROJECT_ID/slack-bot/haly:$SHORT_SHA-dev', '.' ]
 # Deploy container image to Cloud Run
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   entrypoint: gcloud
