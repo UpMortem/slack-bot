@@ -1,9 +1,8 @@
-import { Router } from 'express';
+import { Router } from "express";
 
-import { postEvent } from "../controllers/SlackEvents/slackEvents";
-import { postCommand } from "../controllers/SlackSlashCommands";
+import { postEvent, postCommand } from "../controllers/slackController";
 
 export const slackRouter: Router = Router();
 
 slackRouter.post("/events", postEvent);
-slackRouter.post("/haly", postCommand);
+slackRouter.post("/command/:commandName", postCommand);
