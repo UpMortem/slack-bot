@@ -58,5 +58,5 @@ jobs:
         with:
           push: true
           tags: |
-             us-docker.pkg.dev/develop-up/slack-bot/haly:${{ steps.get-tag.outputs.sha_short }}
-             us-docker.pkg.dev/develop-up/slack-bot/haly:latest
+             us-docker.pkg.dev/develop-up/slack-bot:${{ steps.get-tag.outputs.sha_short }}
+             us-docker.pkg.dev/develop-up/slack-bot:latest
