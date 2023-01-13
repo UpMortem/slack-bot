@@ -13,8 +13,7 @@ export const postEvent = async (req: Request, res: Response) => {
   const payload = req.body as AppMentionPayload;
   // console.log(payload);
 
-  const { channel, text, thread_ts } = payload.event;
-  // console.log(files);
+  const { channel, text, thread_ts, ts } = payload.event;
   const botId = findBotId(payload);
   if (!botId) {
     console.error("botId not found");
@@ -26,7 +25,11 @@ export const postEvent = async (req: Request, res: Response) => {
     res.sendStatus(200);
     const userMessage = "USER: " + text.replace(`<@${botId}>`, "").trim();
     const response = await respondToUser(userMessage);
-    await sendMessage(channel, thread_ts, response);
+    let thread_to_reply = thread_ts;
+    if(thread_ts !== ts) { //It's not a thread
+      thread_to_reply = ts
+    }
+    await sendMessage(channel, thread_to_reply, response);
     return;
   } catch (error) {
     console.error(error);
