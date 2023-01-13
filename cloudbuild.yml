@@ -1,13 +1,13 @@
 steps:
 # Build container in Cloud Build
 - name: 'gcr.io/cloud-builders/docker'
-  args: [ 'build', '-t', 'us-docker.pkg.dev/$PROJECT_ID/slack-bot/haly:$SHORT_SHA-dev', '.' ]
+  args: [ 'build', '-t', 'us-docker.pkg.dev/$PROJECT_ID/slack-bot/haly:dev', '.' ]
 # Deploy container image to Cloud Run
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   entrypoint: gcloud
-  args: ['run', 'deploy', 'haly-dev', '--image', 'us-docker.pkg.dev/$PROJECT_ID/slack-bot/haly@sha256:$COMMIT_SHA', '--region', 'us-central1']
+  args: ['run', 'deploy', 'haly-dev', '--image', 'us-docker.pkg.dev/$PROJECT_ID/slack-bot/haly:dev', '--region', 'us-central1']
 images:
-- us-docker.pkg.dev/$PROJECT_ID/slack-bot/haly:$SHORT_SHA-dev
+- us-docker.pkg.dev/$PROJECT_ID/slack-bot/haly:dev
 
 options:
   logging: CLOUD_LOGGING_ONLY
