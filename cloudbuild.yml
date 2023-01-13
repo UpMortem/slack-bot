@@ -5,7 +5,7 @@ steps:
 # Deploy container image to Cloud Run
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   entrypoint: gcloud
-  args: ['run', 'deploy', 'haly-dev', '--image', 'us-docker.pkg.dev/$PROJECT_ID/slack-bot/haly:$SHORT_SHA-dev', '--region', 'us-central1']
+  args: ['run', 'deploy', 'haly-dev', '--image', 'us-docker.pkg.dev/$PROJECT_ID/slack-bot/haly:$COMMIT_SHA', '--region', 'us-central1']
 images:
 - us-docker.pkg.dev/$PROJECT_ID/slack-bot/haly:$SHORT_SHA-dev
 
