@@ -2,12 +2,10 @@ steps:
 # Build container in Cloud Build
 - name: 'gcr.io/cloud-builders/docker'
   args: [ 'build', '-t', 'us-docker.pkg.dev/$PROJECT_ID/slack-bot/haly:$TAG_NAME', '.' ]
-images:
-- us-docker.pkg.dev/$PROJECT_ID/slack-bot/haly:$TAG_NAME
 # Deploy container image to Cloud Run
 - name: 'gcr.io/cloud-builders/gcloud'
   args: ['run', 'deploy', 'haly-dev', '--image', 'us-docker.pkg.dev/$PROJECT_ID/slack-bot/haly:$TAG_NAME', '--region', 'us-central1']
-
-
+images:
+- us-docker.pkg.dev/$PROJECT_ID/slack-bot/haly:$TAG_NAME
 options:
   logging: CLOUD_LOGGING_ONLY
