@@ -34,8 +34,6 @@ steps:
       - '--allow-unauthenticated'
       - '--min-instances=0'
       - '--max-instances=2'
-    env:
-      - COMMITTER:
     id: Deploy
     entrypoint: gcloud
 images:
