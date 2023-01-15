@@ -20,22 +20,15 @@ steps:
       - '-c'
       - |
         set -x && \
-        git log --format='%cn' -n 1 HEAD > /workspace/git_author.txt && \
-        COMMITTER=$(cat /workspace/git_author.txt)
+        git log --format='%cn' -n 1 HEAD > /workspace/git_author.txt
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
     args:
-      - run
-      - deploy
-      - haly-$$COMMITTER
-      - '--platform=managed'
-      - '--image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$BRANCH_NAME'
-      - '--update-secrets=SLACK_BOT_TOKEN=HALY_$$COMMITTER_SLACK_BOT_TOKEN:latest,SLACK_SIGNING_SECRET=HALY_$$COMMITTER_SLACK_SIGNING_SECRET:latest,OPENAI_API_KEY=HALY_$$COMMITTER_OPEN_API_KEY:latest'
-      - '--region=us-central1'
-      - '--allow-unauthenticated'
-      - '--min-instances=0'
-      - '--max-instances=2'
+      - '-c'
+      - |
+        export COMMITTER=$(cat /workspace/git_author.txt) && \
+        gcloud run deploy haly-$COMMITTER --platform=managed --image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$BRANCH_NAME --update-secrets=SLACK_BOT_TOKEN=HALY_$COMMITTER_SLACK_BOT_TOKEN:latest,SLACK_SIGNING_SECRET=HALY_$COMMITTER_SLACK_SIGNING_SECRET:latest,OPENAI_API_KEY=HALY_$COMMITTER_OPEN_API_KEY:latest --region=us-central1 --allow-unauthenticated --min-instances=0 --max-instances=2
     id: Deploy
-    entrypoint: gcloud
+    entrypoint: /bin/sh
 images:
   - '$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$BRANCH_NAME'
 options:
