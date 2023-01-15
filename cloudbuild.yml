@@ -24,6 +24,7 @@ steps:
       - '--update-secrets=SLACK_BOT_TOKEN=HALY_MASTER_SLACK_BOT_TOKEN:latest,SLACK_SIGNING_SECRET=HALY_MASTER_SLACK_SIGNING_SECRET:latest,OPENAI_API_KEY=HALY_MASTER_OPEN_API_KEY:latest'
       - '--region=us-central1'
       - '--allow-unauthenticated'
+      - '--min-instances=1'
     id: Deploy
     entrypoint: gcloud
 images:
