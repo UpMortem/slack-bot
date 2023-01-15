@@ -42,7 +42,7 @@ images:
   - '$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$BRANCH_NAME'
 options:
   env:
-    - COMMITTER=$COMMITTER
+    - COMMITTER='$COMMITTER'
   substitutionOption: ALLOW_LOOSE
   logging: CLOUD_LOGGING_ONLY
 substitutions:
