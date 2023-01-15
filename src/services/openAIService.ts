@@ -12,7 +12,7 @@ type openAiModel =
   | "text-ada-001";
 
 const basePrompt =
-  "You are a Slack bot named Haly. You are having a conversation with a user.\n\n";
+  "You are a Slack bot named Haly. You are having a conversation with other users.";
 
 export const runCompletion = async (text) => {
   const completion = await openai.createCompletion({
@@ -25,7 +25,7 @@ export const runCompletion = async (text) => {
 };
 
 export const respondToUser = async (text) => {
-  const prompt = `${basePrompt}${text}\nHaly:`;
+  const prompt = `${basePrompt}\n\n${text}\nHALY:`;
   const response = await runCompletion(prompt);
   return response;
 };

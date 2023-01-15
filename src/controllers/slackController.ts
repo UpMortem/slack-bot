@@ -1,5 +1,5 @@
 import { respondToUser } from "./../services/openAIService";
-import { sendMessage, getThreadMessages } from "../services/slackService";
+import { sendMessage, getThreadMessages, getThreadMessagesWithUsernames } from "../services/slackService";
 import { getConversationSummary } from "../services/openAIService";
 import { Request, Response } from "express";
 import { AppMentionPayload } from "seratch-slack-types/events-api";
@@ -23,13 +23,18 @@ export const postEvent = async (req: Request, res: Response) => {
 
   try {
     res.sendStatus(200);
-    const userMessage = "USER: " + text.replace(`<@${botId}>`, "").trim();
-    const response = await respondToUser(userMessage);
-    let thread_to_reply = thread_ts;
-    if(thread_ts !== ts) { //It's not a thread
-      thread_to_reply = ts
+    let threadToReply = thread_ts;
+    // Reply in a new thread if the message is not in a thread
+    if(thread_ts !== ts) { 
+      threadToReply = ts
     }
-    await sendMessage(channel, thread_to_reply, response);
+    let messages = "USER: " + text.replace(`<@${botId}>`, "").trim();
+    if(thread_ts) {
+      messages = await getThreadMessagesWithUsernames(channel, thread_ts, botId) || messages;
+    }
+    const response = await respondToUser(messages);
+    
+    await sendMessage(channel, threadToReply, response);
     return;
   } catch (error) {
     console.error(error);
