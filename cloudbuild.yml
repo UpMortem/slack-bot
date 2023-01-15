@@ -22,8 +22,7 @@ steps:
       - $_SERVICE_NAME
       - '--platform=managed'
       - '--image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$TAG_NAME'
-      - >-
-        --labels=managed-by=gcp-cloud-build-deploy-cloud-run,tag=$TAG_NAME,gcb-build-id=$BUILD_ID
+      - '--set-secrets PORT=HALY_MASTER_PORT,SLACK_BOT_TOKEN=HALY_MASTER_SLACK_BOT_TOKEN,SLACK_SIGNING_SECRET=HALY_MASTER_SLACK_SIGNING_SECRET,OPEN_API_KEY=HALY_MASTER_OPEN_API_KEY'
       - '--quiet'
     id: Deploy
     entrypoint: gcloud
