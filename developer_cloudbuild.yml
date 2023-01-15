@@ -26,14 +26,14 @@ steps:
       - '-c'
       - |
         export COMMITTER=$(cat /workspace/git_author.txt) && \
-        gcloud run deploy haly-$COMMITTER --platform=managed --image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$BRANCH_NAME --update-secrets=SLACK_BOT_TOKEN=HALY_$COMMITTER_SLACK_BOT_TOKEN:latest,SLACK_SIGNING_SECRET=HALY_$COMMITTER_SLACK_SIGNING_SECRET:latest,OPENAI_API_KEY=HALY_$COMMITTER_OPEN_API_KEY:latest --region=us-central1 --allow-unauthenticated --min-instances=0 --max-instances=2
+        gcloud run deploy haly-${COMMITTER} --platform=managed --image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$BRANCH_NAME --update-secrets=SLACK_BOT_TOKEN=HALY_${COMMITTER}_SLACK_BOT_TOKEN:latest,SLACK_SIGNING_SECRET=HALY_${COMMITTER}_SLACK_SIGNING_SECRET:latest,OPENAI_API_KEY=HALY_${COMMITTER}_OPEN_API_KEY:latest --region=us-central1 --allow-unauthenticated --min-instances=0 --max-instances=2
     id: Deploy
     entrypoint: /bin/sh
 images:
   - '$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$BRANCH_NAME'
 options:
   env:
-    - COMMITTER='$COMMITTER'
+    - COMMITTER='${COMMITTER}'
   substitutionOption: ALLOW_LOOSE
   logging: CLOUD_LOGGING_ONLY
 substitutions:
