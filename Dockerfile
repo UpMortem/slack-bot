@@ -5,7 +5,8 @@ COPY ./* /app/
 WORKDIR /app
 
 RUN npm install
+RUN npm run build
 
-CMD ["npm", "run"]
+CMD ["npm", "start"]
 
 EXPOSE 8080
