@@ -21,7 +21,7 @@ steps:
       - $_SERVICE_NAME
       - '--platform=managed'
       - '--image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$TAG_NAME'
-      - '--update-secrets=PORT=HALY_MASTER_PORT:latest,SLACK_BOT_TOKEN=HALY_MASTER_SLACK_BOT_TOKEN:latest,SLACK_SIGNING_SECRET=HALY_MASTER_SLACK_SIGNING_SECRET:latest,OPEN_API_KEY=HALY_MASTER_OPEN_API_KEY:latest'
+      - '--update-secrets=HALY_PORT=HALY_MASTER_PORT:latest,SLACK_BOT_TOKEN=HALY_MASTER_SLACK_BOT_TOKEN:latest,SLACK_SIGNING_SECRET=HALY_MASTER_SLACK_SIGNING_SECRET:latest,OPEN_API_KEY=HALY_MASTER_OPEN_API_KEY:latest'
       - '--region=us-central1'
     id: Deploy
     entrypoint: gcloud
