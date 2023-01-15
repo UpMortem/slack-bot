@@ -22,14 +22,13 @@ steps:
       - '--platform=managed'
       - '--image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$TAG_NAME'
       - '--update-secrets PORT=HALY_MASTER_PORT,SLACK_BOT_TOKEN=HALY_MASTER_SLACK_BOT_TOKEN,SLACK_SIGNING_SECRET=HALY_MASTER_SLACK_SIGNING_SECRET,OPEN_API_KEY=HALY_MASTER_OPEN_API_KEY'
-      - '--quiet'
+      - '--region=us-central1'
     id: Deploy
     entrypoint: gcloud
 images:
   - '$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$TAG_NAME'
 options:
   substitutionOption: ALLOW_LOOSE
-  logging: CLOUD_LOGGING_ONLY
 substitutions:
   _GCR_HOSTNAME: us.gcr.io
   _PLATFORM: managed
