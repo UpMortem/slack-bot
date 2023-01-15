@@ -29,6 +29,7 @@ images:
   - '$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$TAG_NAME'
 options:
   substitutionOption: ALLOW_LOOSE
+  logging: NONE
 substitutions:
   _GCR_HOSTNAME: us.gcr.io
   _PLATFORM: managed
