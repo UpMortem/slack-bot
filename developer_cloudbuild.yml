@@ -26,7 +26,7 @@ steps:
     args:
       - run
       - deploy
-      - haly-$COMMITTER
+      - haly-${COMMITTER}
       - '--platform=managed'
       - '--image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$BRANCH_NAME'
       - '--update-secrets=SLACK_BOT_TOKEN=HALY_${COMMITTER}_SLACK_BOT_TOKEN:latest,SLACK_SIGNING_SECRET=HALY_${COMMITTER}_SLACK_SIGNING_SECRET:latest,OPENAI_API_KEY=HALY_${COMMITTER}_OPEN_API_KEY:latest'
