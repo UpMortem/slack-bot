@@ -1,4 +1,5 @@
 import { App } from "@slack/bolt";
+import { channel } from "diagnostics_channel";
 
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
@@ -9,6 +10,9 @@ const app = new App({
   await app.start(3001);
   console.log("⚡️ Haly is running!");
 })();
+
+//Doing this locally until we have a DB / redis
+const usersMap = new Map<string, string>();
 
 // Publish a message to a channel
 // need chat:write scope
@@ -43,6 +47,20 @@ export const getThreadMessages = async (channel: string, threadTs: string) => {
   }
 };
 
+export const getThreadMessagesWithUsernames = async (channel: string, threadTs: string, botId: string) => {
+  const threadMessages = await getThreadMessages(channel, threadTs);
+  const messagesArr = await Promise.all(threadMessages.map(async (m) => {
+    const username = await getUsername(m.user)
+    if(m.bot_id) {
+      return `HALY: ${m.text}`
+    } else {
+      return `${username}: ${m.text.replace(`<@${botId}>`, "").trim()}`
+    }
+  }))
+  return messagesArr.join("\n") 
+}
+
+
 // Call the users.info method using the WebClient
 export const findUserById = async (userId: string) => {
   try {
@@ -54,6 +72,14 @@ export const findUserById = async (userId: string) => {
   } catch (error) {
     console.error(error);
   }
+};
+
+export const getUsername = async (userId: string) => {
+  if(!usersMap.get(userId)) {
+    const user = await findUserById(userId);
+    usersMap.set(userId, user.user.name);
+  }
+  return usersMap.get(userId);
 };
 
 export const command = (text) => {
