@@ -3,3 +3,4 @@ tslint.json
 .github/*
 .env
 Dockerfile
+dev-env-setup/*
