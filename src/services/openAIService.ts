@@ -30,15 +30,3 @@ export const respondToUser = async (text) => {
   return response;
 };
 
-export const getConversationSummary = async (threadMessages) => {
-  const filteredThreadMessages = threadMessages
-    .filter((m) => m.bot_id === null)
-    .map((message) => message.text)
-    .join("\n");
-
-  const summary = await runCompletion(
-    `This is a conversation between multiple users, each username starts with a '<' character and ends with '>'. Make a summary of the conversation:\n${filteredThreadMessages}\n\nSUMMARY:`
-  );
-
-  return summary;
-};

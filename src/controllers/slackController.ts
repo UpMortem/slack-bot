@@ -1,6 +1,5 @@
 import { respondToUser } from "./../services/openAIService";
-import { sendMessage, getThreadMessages, getThreadMessagesWithUsernames } from "../services/slackService";
-import { getConversationSummary } from "../services/openAIService";
+import { sendMessage, getThreadMessagesWithUsernames } from "../services/slackService";
 import { Request, Response } from "express";
 import { AppMentionPayload } from "seratch-slack-types/events-api";
 
@@ -63,13 +62,6 @@ export const postCommand = async (req: Request, res: Response) => {
       .status(500)
       .send({ error: "An error occured while processing the request" });
   }
-};
-
-const getThreadSummary = async (channelId, threadTs) => {
-  const threadMessages = await getThreadMessages(channelId, threadTs);
-  const summary = await getConversationSummary(threadMessages);
-
-  return summary;
 };
 
 const findBotId = (payload: AppMentionPayload) => {
