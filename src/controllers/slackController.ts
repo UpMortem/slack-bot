@@ -32,13 +32,14 @@ export const postEvent = async (req: Request, res: Response) => {
     if (thread_ts !== ts) {
       threadToReply = ts;
     }
-    let messages = "USER: " + text.replace(`<@${botId}>`, "").trim();
+    const userMessage = text.replace(`<@${botId}>`, "").trim();
+    let messages = `USER:${userMessage}`;
     if (thread_ts) {
       messages =
         (await getThreadMessagesWithUsernames(channel, thread_ts, botId)) ||
         messages;
     }
-    const response = await respondToUser(messages);
+    const response = await respondToUser(messages, userMessage);
 
     await sendMessage(channel, threadToReply, response);
     return;
