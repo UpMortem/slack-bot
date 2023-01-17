@@ -17,10 +17,13 @@ If you ask me a question that is rooted in truth, I will give you the answer.
 If you ask me a question that is nonsense, trickery, or has no clear answer, I will respond with "Sorry, I don't know the answer to that."
 If you ask me about any weather condition (temperature, wind, etc.), I will answer with a JSON string as this one: '{ "request": "weather", "city": <CITY> }'. Where <CITY> is the city you are asking about, with no abreviations.
 
+Examples:
 User: How is the weather in London, UK?
 Haly: { "request": "weather", "city": "London,UK" }
 User: Is it warm in SB?
 Haly: { "request": "weather", "city": "Santa Barbara,CA" }
+
+Here starts the real conversation:
 `;
 
 const weatherPrompt = (data: string, thread: string) =>
