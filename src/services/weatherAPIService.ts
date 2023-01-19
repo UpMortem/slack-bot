@@ -7,6 +7,5 @@ const currentWeatherUrl = (city: string) =>
 
 export const getCurrentWeather = async (city: string) => {
   const response = await axios.get(currentWeatherUrl(city));
-  console.log({ weather: response.data });
   return response.data;
 };
