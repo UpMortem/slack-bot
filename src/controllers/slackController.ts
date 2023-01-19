@@ -39,7 +39,6 @@ export const postEvent = async (req: Request, res: Response) => {
         (await getThreadMessagesWithUsernames(channel, thread_ts, botId)) ||
         messages;
     }
-    console.log({ messages });
     const response = await respondToUser(messages);
 
     await sendMessage(channel, threadToReply, response);

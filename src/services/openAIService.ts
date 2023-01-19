@@ -41,7 +41,6 @@ ${usersMessage}
 Haly:`;
 
 export const runCompletion = async (text, temperature = 0.7) => {
-  console.log({ prompt: text });
   const completion = await openai.createCompletion({
     model: "text-davinci-003",
     prompt: text,
@@ -58,9 +57,7 @@ ${fullThread.join("\n")}
 Haly:`;
   let response = await runCompletion(prompt);
   // Special request to get the weather/time
-  console.log({ response });
   const jsonRespose = toJSON(response);
-  console.log({ jsonRespose });
   if (jsonRespose) {
     response = await handleSpecialRequest(
       jsonRespose,
