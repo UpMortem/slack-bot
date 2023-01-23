@@ -1,4 +1,5 @@
 import { App } from "@slack/bolt";
+import { channel } from "diagnostics_channel";
 
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
@@ -46,24 +47,19 @@ export const getThreadMessages = async (channel: string, threadTs: string) => {
   }
 };
 
-export const getThreadMessagesWithUsernames = async (
-  channel: string,
-  threadTs: string,
-  botId: string
-) => {
+export const getThreadMessagesWithUsernames = async (channel: string, threadTs: string, botId: string) => {
   const threadMessages = await getThreadMessages(channel, threadTs);
-  const messagesArr = await Promise.all(
-    threadMessages.map(async (m) => {
-      const username = await getUsername(m.user);
-      if (m.bot_id) {
-        return `Haly: ${m.text}`;
-      } else {
-        return `${username}: ${m.text.replace(`<@${botId}>`, "").trim()}`;
-      }
-    })
-  );
-  return messagesArr;
-};
+  const messagesArr = await Promise.all(threadMessages.map(async (m) => {
+    const username = await getUsername(m.user)
+    if(m.bot_id) {
+      return `HALY: ${m.text}`
+    } else {
+      return `${username}: ${m.text.replace(`<@${botId}>`, "").trim()}`
+    }
+  }))
+  return messagesArr.join("\n") 
+}
+
 
 // Call the users.info method using the WebClient
 export const findUserById = async (userId: string) => {
@@ -79,7 +75,7 @@ export const findUserById = async (userId: string) => {
 };
 
 export const getUsername = async (userId: string) => {
-  if (!usersMap.get(userId)) {
+  if(!usersMap.get(userId)) {
     const user = await findUserById(userId);
     usersMap.set(userId, user.user.name);
   }
