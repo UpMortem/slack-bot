@@ -1,9 +1,5 @@
 import { respondToUser } from "./../services/openAIService";
-import {
-  sendMessage,
-  getThreadMessages,
-  getThreadMessagesWithUsernames,
-} from "../services/slackService";
+import { sendMessage, getThreadMessages, getThreadMessagesWithUsernames } from "../services/slackService";
 import { getConversationSummary } from "../services/openAIService";
 import { Request, Response } from "express";
 import { AppMentionPayload } from "seratch-slack-types/events-api";
@@ -29,22 +25,22 @@ export const postEvent = async (req: Request, res: Response) => {
     res.sendStatus(200);
     let threadToReply = thread_ts;
     // Reply in a new thread if the message is not in a thread
-    if (thread_ts !== ts) {
-      threadToReply = ts;
+    if(thread_ts !== ts) { 
+      threadToReply = ts
     }
-    const userMessage = text.replace(`<@${botId}>`, "").trim();
-    let messages = [`USER:${userMessage}`];
-    if (thread_ts) {
-      messages =
-        (await getThreadMessagesWithUsernames(channel, thread_ts, botId)) ||
-        messages;
+    let messages = "USER: " + text.replace(`<@${botId}>`, "").trim();
+    if(thread_ts) {
+      messages = await getThreadMessagesWithUsernames(channel, thread_ts, botId) || messages;
     }
     const response = await respondToUser(messages);
-
+    
     await sendMessage(channel, threadToReply, response);
     return;
   } catch (error) {
     console.error(error);
+    res
+      .status(500)
+      .send({ error: "An error occured while processing the request" });
   }
 };
 
