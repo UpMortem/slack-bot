@@ -54,7 +54,3 @@ def get_username(user_id: str):
         user = find_user_by_id(user_id)
         users_map[user_id] = user["user"]["name"]
     return users_map[user_id]
-
-
-def command(text: str):
-    return "You said: " + text

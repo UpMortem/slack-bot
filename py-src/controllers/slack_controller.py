@@ -11,6 +11,24 @@ from services.openai_service import (
 from threading import Thread
 
 
+# POST /slack/events
+def post_event(request):
+    if request.get("type") == "url_verification":
+        return request.get("challenge")
+
+    Thread(target=process_event_payload, args=(request,)).start()
+    return jsonify({"message": "success"}), 200
+
+
+def find_bot_id(payload):
+    for auth in payload["authorizations"]:
+        # Check if the current authorization is a bot
+        if auth["is_bot"]:
+            return auth["user_id"]
+
+    return None
+
+
 def process_event_payload(payload):
     event = payload.get("event")
     channel = event.get("channel")
@@ -34,35 +52,9 @@ def process_event_payload(payload):
         response = respond_to_user(messages)
         return send_message(channel, thread_to_reply, response)
     except Exception as error:
+        # Improve error handling
         print(error)
         return
-
-
-def post_event(request):
-    if request.get("type") == "url_verification":
-        return request.get("challenge")
-    Thread(target=process_event_payload, args=(request,)).start()
-    return jsonify({"message": "success"}), 200
-
-
-def post_command(request):
-    command = request.params.get("commandName")
-
-    try:
-        if command == "test":
-            return jsonify({"message": "This is a test command"}), 200
-        else:
-            return (
-                jsonify(
-                    {
-                        "error": f"Sorry, I don't know how to handle the command '{command}'"
-                    }
-                ),
-                200,
-            )
-    except Exception as error:
-        print(error)
-        return jsonify({"error": "An error occurred while processing the request"}), 500
 
 
 def get_thread_summary(channel_id, thread_ts):
@@ -70,8 +62,3 @@ def get_thread_summary(channel_id, thread_ts):
     summary = get_conversation_summary(thread_messages)
 
     return summary
-
-
-def find_bot_id(payload):
-    bot = next((auth for auth in payload["authorizations"] if auth["is_bot"]), None)
-    return bot["user_id"]

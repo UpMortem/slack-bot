@@ -3,4 +3,9 @@ node_modules
 .env
 # Ignore built ts files
 dist/**/*
+
+venv/
+__pycache__/
+.idea/
+
 gha-creds-*.json
