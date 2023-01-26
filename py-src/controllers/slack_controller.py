@@ -1,15 +1,12 @@
 from flask import jsonify
+import time
 from services.slack_service import (
     send_message,
     get_thread_messages,
     get_thread_messages_with_usernames,
 )
-from services.openai_service import (
-    respond_to_user,
-    get_conversation_summary,
-)
+from services.openai_service import respond_to_user
 from threading import Thread
-
 
 # POST /slack/events
 def post_event(request):
@@ -49,16 +46,14 @@ def process_event_payload(payload):
                 get_thread_messages_with_usernames(channel, thread_ts, bot_id)
                 or messages
             )
+
+        start_time = time.perf_counter()
         response = respond_to_user(messages)
+        end_time = time.perf_counter()
+        response = response + f"\n\n\n_response generated in {round(end_time - start_time, 2)}s_ :hourglass:"
+
         return send_message(channel, thread_to_reply, response)
     except Exception as error:
         # Improve error handling
         print(error)
         return
-
-
-def get_thread_summary(channel_id, thread_ts):
-    thread_messages = get_thread_messages(channel_id, thread_ts)
-    summary = get_conversation_summary(thread_messages)
-
-    return summary
