@@ -8,3 +8,6 @@ handler = SlackRequestHandler(slack_app)
 
 flask_app = Flask("Haly")
 flask_app.register_blueprint(slack_router, url_prefix="/slack")
+
+if __name__ == "__main__":
+    flask_app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))

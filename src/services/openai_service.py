@@ -3,9 +3,7 @@ import os
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
-with open("prompts/base_prompt.txt", "r") as file:
-    base_prompt = file.read()
-
+base_prompt = "You are a Slack bot named Haly. You are having a conversation with a user.\n\n"
 
 def run_completion(text):
     completion = openai.Completion.create(

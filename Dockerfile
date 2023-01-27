@@ -1,12 +1,13 @@
-FROM node:19.4.0-bullseye-slim
-
-COPY ./* /app/
+FROM python:3.10-slim
+ENV PYTHONUNBUFFERED True
 
 WORKDIR /app
 
-RUN npm install
-RUN npm run build
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["npm", "start"]
+COPY ./src ./src
+
+CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 index:flask_app --chdir /app/src
 
 EXPOSE 8080
