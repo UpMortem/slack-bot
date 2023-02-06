@@ -2,7 +2,6 @@ from flask import jsonify
 import time
 from services.slack_service import (
     send_message,
-    get_thread_messages,
     get_thread_messages_with_usernames,
 )
 from services.openai_service import respond_to_user
