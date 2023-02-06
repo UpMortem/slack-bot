@@ -11,12 +11,10 @@ def run_completion(text):
     )
     return completion.choices[0].text
 
-
 def respond_to_user(text):
     prompt = f"{base_prompt}{text}\nHaly:"
     response = run_completion(prompt)
     return response
-
 
 def get_conversation_summary(thread_messages):
     filtered_thread_messages = "\n".join(
