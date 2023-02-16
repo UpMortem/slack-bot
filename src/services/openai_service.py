@@ -4,12 +4,13 @@ from lib.retry import retry
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
-base_prompt = "You are a Slack bot named Haly. You are having a conversation with a user.\n\n"
+base_prompt = "You are a Slack bot named Haly. You are an expert in everything. You are a consultant. You are having a conversation with a client.\n\n"
 
 def run_completion(text):
-    completion = retry(lambda: openai.Completion.create(
-        model="text-davinci-003", prompt=text, max_tokens=1000, temperature=0.7
-    ))
+    completion = openai.Completion.create(
+        model="text-davinci-003", prompt=text, max_tokens=3000, temperature=0.7
+    )
+
     return completion.choices[0].text
 
 def respond_to_user(text):
