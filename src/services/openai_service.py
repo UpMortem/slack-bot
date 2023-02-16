@@ -1,5 +1,6 @@
 import openai
 import os
+from lib.retry import retry
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
@@ -9,6 +10,7 @@ def run_completion(text):
     completion = openai.Completion.create(
         model="text-davinci-003", prompt=text, max_tokens=3000, temperature=0.7
     )
+
     return completion.choices[0].text
 
 def respond_to_user(text):
