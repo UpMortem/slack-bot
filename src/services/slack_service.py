@@ -114,7 +114,7 @@ def process_event_payload(payload):
         if thread_ts != ts:
             thread_to_reply = ts
 
-        msg_ts = send_message(channel, thread_to_reply, "Thinking...")
+        msg_ts = send_message(channel, thread_to_reply, "*Thinking...*")
 
         messages = f"USER: {text.replace(f'<@{bot_id}>','').strip()}"
         if thread_ts:
