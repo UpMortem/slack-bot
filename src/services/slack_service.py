@@ -108,6 +108,8 @@ def process_event_payload(payload):
     text = event.get("text")
     thread_ts = event.get("thread_ts")
     ts = event.get("ts")
+    team_id = event.get("team")
+    
 
     try:
         thread_to_reply = thread_ts
@@ -124,7 +126,7 @@ def process_event_payload(payload):
             )
 
         start_time = time.perf_counter()
-        response = respond_to_user(messages)
+        response = respond_to_user(messages, team_id)
         end_time = time.perf_counter()
         print(f"response generated in {round(end_time - start_time, 2)}s")
 
