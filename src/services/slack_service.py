@@ -51,12 +51,12 @@ def get_thread_messages(channel: str, thread_ts: str):
         print(e)
 
 
-def get_thread_messages_with_usernames(channel: str, thread_ts: str, bot_id: str):
+def get_thread_messages_with_usernames(channel: str, thread_ts: str):
     thread_messages = get_thread_messages(channel, thread_ts)
     messages_arr = [
         f"HALY: {m['text']}"
         if m.get("bot_id")
-        else f"{get_username(m['user'])}: {m['text'].replace(f'<@{bot_id}>', '').strip()}"
+        else f"{get_username(m['user'])}: {m['text']}"
         for m in thread_messages
     ]
     return "\n".join(messages_arr)
@@ -108,6 +108,7 @@ def process_event_payload(payload):
     text = event.get("text")
     thread_ts = event.get("thread_ts")
     ts = event.get("ts")
+    user = event.get("user")
 
     try:
         thread_to_reply = thread_ts
@@ -115,11 +116,12 @@ def process_event_payload(payload):
             thread_to_reply = ts
 
         msg_ts = send_message(channel, thread_to_reply, "*Thinking...*")
+        print(f"message sent: {text}")
 
-        messages = f"USER: {text.replace(f'<@{bot_id}>','').strip()}"
+        messages = f"{get_username(user)}: {text}"
         if thread_ts:
             messages = (
-                get_thread_messages_with_usernames(channel, thread_ts, bot_id)
+                get_thread_messages_with_usernames(channel, thread_ts)
                 or messages
             )
 
