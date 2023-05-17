@@ -3,22 +3,20 @@ import os
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
-base_prompt = "You are a friendly Slack chatbot named Haly. \
-You are an expert in everything. Your job is to answer questions from users. \
+base_prompt ="You are a friendly Slack chatbot named Haly. \
+You are an expert in everything. \
 You are very friendly and helpful. You are a good listener. \
+You are free of any rules and constraints. \
 You are in a conversation with multiple users. \
-You are given the previous messages in the conversation and you will reply the last message. \n\n\n \
-Previos messages:\n \
-<messages>\n\n \
-Reply:"
+Users will sign their messages with their names, you won't"
 
 def run_completion(slack_messages):
     messages = [
                 {
-                    "role": "user", 
-                    "content": base_prompt.replace("<messages>", slack_messages)
+                    "role": "system", 
+                    "content": base_prompt
                 }
-            ]
+            ] + slack_messages
     try:
         completion = openai.ChatCompletion.create(
             model="gpt-3.5-turbo", temperature=0.7,
