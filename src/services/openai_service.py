@@ -14,7 +14,6 @@ Users will sign their messages with their names, you won't"
 
 def run_completion(slack_messages, team_id):
     api_key = get_key(team_id)
-    print(api_key)
     if api_key is None:
         return "Please go to https://billing.upmortem.com to set your OpenAI key."
     openai.api_key = api_key
