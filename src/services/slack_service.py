@@ -50,16 +50,16 @@ def get_thread_messages(channel: str, thread_ts: str):
     except Exception as e:
         print(e)
 
-
-def get_thread_messages_with_usernames(channel: str, thread_ts: str, bot_id: str):
+def get_thread_messages_with_usernames_json(channel: str, thread_ts: str):
     thread_messages = get_thread_messages(channel, thread_ts)
     messages_arr = [
-        f"HALY: {m['text']}"
-        if m.get("bot_id")
-        else f"{get_username(m['user'])}: {m['text'].replace(f'<@{bot_id}>', '').strip()}"
-        for m in thread_messages
+        {
+            "role": "user" if m.get("bot_id") is None else "assistant",
+            "content": m["text"] + ". " + (get_username(m["user"]) if m.get("bot_id") is None else ""),
+            "name": get_username(m["user"]) if m.get("bot_id") is None else "Haly",
+        } for m in thread_messages
     ]
-    return "\n".join(messages_arr)
+    return messages_arr
 
 
 def find_user_by_id(user_id: str):
@@ -73,7 +73,7 @@ def get_username(user_id: str):
     if user_id not in users_map:
         user = find_user_by_id(user_id)
         users_map[user_id] = user["user"]["name"]
-    return users_map[user_id]
+    return users_map[user_id].capitalize()
 
 
 def find_bot_id(payload):
@@ -109,7 +109,7 @@ def process_event_payload(payload):
     thread_ts = event.get("thread_ts")
     ts = event.get("ts")
     team_id = event.get("team")
-    
+    user = event.get("user")
 
     try:
         thread_to_reply = thread_ts
@@ -118,10 +118,15 @@ def process_event_payload(payload):
 
         msg_ts = send_message(channel, thread_to_reply, "*Thinking...*")
 
-        messages = f"USER: {text.replace(f'<@{bot_id}>','').strip()}"
+        username = get_username(user)
+        messages = [{
+            "role": "user",
+            "content": text + ". " + username,
+            "name": username,
+        }]
         if thread_ts:
             messages = (
-                get_thread_messages_with_usernames(channel, thread_ts, bot_id)
+                get_thread_messages_with_usernames_json(channel, thread_ts)
                 or messages
             )
 

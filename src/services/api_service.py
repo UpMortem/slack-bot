@@ -8,5 +8,4 @@ def get_key(team_id):
     url = f"http://localhost:6060/api/organization/get_key/{team_id}"
     headers = {"X-Shared-Secret": os.environ["API_SHARED_SECRET"]}
     response = requests.get(url=url, headers=headers, timeout=5)
-    print("response: ", response.json())
     return response.json()["key"]
