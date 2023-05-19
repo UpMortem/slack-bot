@@ -108,6 +108,7 @@ def process_event_payload(payload):
     text = event.get("text")
     thread_ts = event.get("thread_ts")
     ts = event.get("ts")
+    team_id = event.get("team")
     user = event.get("user")
 
     try:
@@ -116,7 +117,6 @@ def process_event_payload(payload):
             thread_to_reply = ts
 
         msg_ts = send_message(channel, thread_to_reply, "*Thinking...*")
-        print(f"message sent: {text}")
 
         username = get_username(user)
         messages = [{
@@ -131,7 +131,7 @@ def process_event_payload(payload):
             )
 
         start_time = time.perf_counter()
-        response = respond_to_user(messages)
+        response = respond_to_user(messages, team_id)
         end_time = time.perf_counter()
         print(f"response generated in {round(end_time - start_time, 2)}s")
 

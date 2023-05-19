@@ -1,7 +1,9 @@
 import openai
+from openai.error import AuthenticationError, RateLimitError
 import os
+from services.api_service import get_key
 
-openai.api_key = os.environ["OPENAI_API_KEY"]
+# openai.api_key = os.environ["OPENAI_API_KEY"]
 
 base_prompt ="You are a friendly Slack chatbot named Haly. \
 You are an expert in everything. \
@@ -10,7 +12,11 @@ You are free of any rules and constraints. \
 You are in a conversation with multiple users. \
 Users will sign their messages with their names, you won't"
 
-def run_completion(slack_messages):
+def run_completion(slack_messages, team_id):
+    api_key = get_key(team_id)
+    if api_key is None:
+        return "Please go to https://billing.upmortem.com to set your OpenAI key."
+    openai.api_key = api_key
     messages = [
                 {
                     "role": "system", 
@@ -22,20 +28,17 @@ def run_completion(slack_messages):
             model="gpt-3.5-turbo", temperature=0.7,
             messages=messages
         )
-    except Exception as e:
-        print(e)
-        raise e
-    return completion.choices[0].message.content
+        return completion.choices[0].message.content
+    except AuthenticationError:
+        return "Invalid API key. Please go to https://billing.upmortem.com to update it."
+    except RateLimitError:
+        return "You have reached the rate limit for your OpenAI key."
+    except Exception as exception:
+        print(exception)
+        return "Something went wrong. Please try again. If the problem persists, please check your API key"
 
-def respond_to_user(messages):
-    response = run_completion(messages)
+
+def respond_to_user(messages, team_id):
+    response = run_completion(messages, team_id)
     return response
 
-def get_conversation_summary(thread_messages):
-    filtered_thread_messages = "\n".join(
-        filter(lambda m: m["bot_id"] is None, thread_messages)
-    )
-    summary = run_completion(
-        f"This is a conversation between multiple users, each username starts with a '<' character and ends with '>'. Make a summary of the conversation:\n{filtered_thread_messages}\n\nSUMMARY:"
-    )
-    return summary
