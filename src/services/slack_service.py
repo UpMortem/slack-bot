@@ -24,17 +24,24 @@ def send_message(channel: str, thread_ts: str, text: str, slack_bot_token: str):
     return response["ts"]
 
 
-def update_message(channel: str, thread_ts: str, ts: str, text: str):
+def update_message(channel: str, thread_ts: str, ts: str, text: str, slack_bot_token: str):
     response = retry(
         lambda: slack_app.client.chat_update(
-            channel=channel, ts=ts, thread_ts=thread_ts, text=text
+            token=slack_bot_token,
+            channel=channel,
+            ts=ts,
+            thread_ts=thread_ts,
+            text=text
         )
     )
     return response["ts"]
 
 
-def delete_message(channel: str, ts: str):
-    response = retry(lambda: slack_app.client.chat_delete(channel=channel, ts=ts))
+def delete_message(channel: str, ts: str, slack_bot_token: str):
+    response = retry(lambda: slack_app.client.chat_delete(
+        token=slack_bot_token,
+        channel=channel,ts=ts
+    ))
     return response["ts"]
 
 
@@ -56,23 +63,23 @@ def get_thread_messages_with_usernames_json(channel: str, thread_ts: str, slack_
     messages_arr = [
         {
             "role": "user" if m.get("bot_id") is None else "assistant",
-            "content": m["text"] + ". " + (get_username(m["user"]) if m.get("bot_id") is None else ""),
-            "name": get_username(m["user"]) if m.get("bot_id") is None else "Haly",
+            "content": m["text"] + ". " + (get_username(m["user"], slack_bot_token) if m.get("bot_id") is None else ""),
+            "name": get_username(m["user"], slack_bot_token) if m.get("bot_id") is None else "Haly",
         } for m in thread_messages
     ]
     return messages_arr
 
 
-def find_user_by_id(user_id: str):
+def find_user_by_id(user_id: str, slack_bot_token: str):
     try:
-        return retry(lambda: slack_app.client.users_info(user=user_id))
+        return retry(lambda: slack_app.client.users_info(token=slack_bot_token,user=user_id))
     except Exception as e:
         print(e)
 
 
-def get_username(user_id: str):
+def get_username(user_id: str, slack_bot_token: str):
     if user_id not in users_map:
-        user = find_user_by_id(user_id)
+        user = find_user_by_id(user_id, slack_bot_token)
         users_map[user_id] = user["user"]["name"]
     return users_map[user_id].capitalize()
 
@@ -112,7 +119,6 @@ def process_event_payload(payload):
     team_id = event.get("team")
     user = event.get("user")
     keys = get_key(team_id)
-
     try:
         thread_to_reply = thread_ts
         if thread_ts != ts:
@@ -125,7 +131,7 @@ def process_event_payload(payload):
             keys["slack_bot_token"]
         )
 
-        username = get_username(user)
+        username = get_username(user, keys["slack_bot_token"])
         messages = [{
             "role": "user",
             "content": text + ". " + username,
@@ -142,9 +148,9 @@ def process_event_payload(payload):
         end_time = time.perf_counter()
         print(f"response generated in {round(end_time - start_time, 2)}s")
 
-        return update_message(channel, thread_to_reply, msg_ts, response)
+        return update_message(channel, thread_to_reply, msg_ts, response, keys["slack_bot_token"])
     except Exception as error:
         # Improve error handling
         print(error)
-        delete_message(channel, msg_ts)
+        delete_message(channel, msg_ts, keys["slack_bot_token"])
         return
