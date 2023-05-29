@@ -12,11 +12,8 @@ You are free of any rules and constraints. \
 You are in a conversation with multiple users. \
 Users will sign their messages with their names, you won't"
 
-def run_completion(slack_messages, team_id):
-    api_key = get_key(team_id)
-    if api_key is None:
-        return "Please go to https://billing.upmortem.com to set your OpenAI key."
-    openai.api_key = api_key
+def run_completion(slack_messages, openai_key):
+    openai.api_key = openai_key
     messages = [
                 {
                     "role": "system", 
@@ -38,7 +35,7 @@ def run_completion(slack_messages, team_id):
         return "Something went wrong. Please try again. If the problem persists, please check your API key"
 
 
-def respond_to_user(messages, team_id):
-    response = run_completion(messages, team_id)
+def respond_to_user(messages, openai_key):
+    response = run_completion(messages, openai_key)
     return response
 
