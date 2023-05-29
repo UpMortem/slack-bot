@@ -80,7 +80,7 @@ def find_user_by_id(user_id: str, slack_bot_token: str):
 def get_username(user_id: str, slack_bot_token: str):
     if user_id not in users_map:
         user = find_user_by_id(user_id, slack_bot_token)
-        users_map[user_id] = user["user"]["name"]
+        users_map[user_id] = user["user"]["profile"]["display_name_normalized"]
     return users_map[user_id].capitalize()
 
 
