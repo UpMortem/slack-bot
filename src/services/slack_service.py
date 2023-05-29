@@ -1,6 +1,7 @@
 from slack_bolt import App
 import time
 import os
+import re
 from services.openai_service import respond_to_user
 from lib.retry import retry
 from .api_service import get_key
@@ -63,8 +64,8 @@ def get_thread_messages_with_usernames_json(channel: str, thread_ts: str, slack_
     messages_arr = [
         {
             "role": "user" if m.get("bot_id") is None else "assistant",
-            "content": m["text"] + ". " + (get_username(m["user"], slack_bot_token) if m.get("bot_id") is None else ""),
-            "name": get_username(m["user"], slack_bot_token) if m.get("bot_id") is None else "Haly",
+            "content": m["text"] + ". " + (get_user_name(m["user"], slack_bot_token) if m.get("bot_id") is None else ""),
+            "name": re.sub(r"\s", "_", get_user_name(m["user"], slack_bot_token)) if m.get("bot_id") is None else "Haly",
         } for m in thread_messages
     ]
     return messages_arr
@@ -77,7 +78,7 @@ def find_user_by_id(user_id: str, slack_bot_token: str):
         print(e)
 
 
-def get_username(user_id: str, slack_bot_token: str):
+def get_user_name(user_id: str, slack_bot_token: str):
     if user_id not in users_map:
         user = find_user_by_id(user_id, slack_bot_token)
         users_map[user_id] = user["user"]["profile"]["real_name"]
@@ -131,11 +132,11 @@ def process_event_payload(payload):
             keys["slack_bot_token"]
         )
 
-        username = get_username(user, keys["slack_bot_token"])
+        username = get_user_name(user, keys["slack_bot_token"])
         messages = [{
             "role": "user",
             "content": text + ". " + username,
-            "name": username,
+            "name": re.sub(r"\s", "_", username),
         }]
         if thread_ts:
             messages = (
