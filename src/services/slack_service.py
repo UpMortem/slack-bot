@@ -3,6 +3,7 @@ import time
 import os
 from services.openai_service import respond_to_user
 from lib.retry import retry
+from .api_service import get_key
 
 # grabs the credentials from .env directly
 slack_app = App()
@@ -11,10 +12,10 @@ slack_app = App()
 users_map = {}
 
 
-def send_message(channel: str, thread_ts: str, text: str):
+def send_message(channel: str, thread_ts: str, text: str, slack_bot_token: str):
     response = retry(
         lambda: slack_app.client.chat_postMessage(
-            token=os.environ["SLACK_BOT_TOKEN"],
+            token=slack_bot_token,
             channel=channel,
             text=text,
             thread_ts=thread_ts,
@@ -37,11 +38,11 @@ def delete_message(channel: str, ts: str):
     return response["ts"]
 
 
-def get_thread_messages(channel: str, thread_ts: str):
+def get_thread_messages(channel: str, thread_ts: str, slack_bot_token: str):
     try:
         return retry(
             lambda: slack_app.client.conversations_replies(
-                token=os.environ["SLACK_BOT_TOKEN"],
+                token=slack_bot_token,
                 channel=channel,
                 ts=thread_ts,
                 include_all_metadata=True,
@@ -50,8 +51,8 @@ def get_thread_messages(channel: str, thread_ts: str):
     except Exception as e:
         print(e)
 
-def get_thread_messages_with_usernames_json(channel: str, thread_ts: str):
-    thread_messages = get_thread_messages(channel, thread_ts)
+def get_thread_messages_with_usernames_json(channel: str, thread_ts: str, slack_bot_token: str):
+    thread_messages = get_thread_messages(channel, thread_ts, slack_bot_token)
     messages_arr = [
         {
             "role": "user" if m.get("bot_id") is None else "assistant",
@@ -110,13 +111,19 @@ def process_event_payload(payload):
     ts = event.get("ts")
     team_id = event.get("team")
     user = event.get("user")
+    keys = get_key(team_id)
 
     try:
         thread_to_reply = thread_ts
         if thread_ts != ts:
             thread_to_reply = ts
 
-        msg_ts = send_message(channel, thread_to_reply, "*Thinking...*")
+        msg_ts = send_message(
+            channel,
+            thread_to_reply,
+            "*Thinking...*",
+            keys["slack_bot_token"]
+        )
 
         username = get_username(user)
         messages = [{
@@ -126,12 +133,12 @@ def process_event_payload(payload):
         }]
         if thread_ts:
             messages = (
-                get_thread_messages_with_usernames_json(channel, thread_ts)
+                get_thread_messages_with_usernames_json(channel, thread_ts, keys["slack_bot_token"])
                 or messages
             )
 
         start_time = time.perf_counter()
-        response = respond_to_user(messages, team_id)
+        response = respond_to_user(messages, keys["openai_key"])
         end_time = time.perf_counter()
         print(f"response generated in {round(end_time - start_time, 2)}s")
 

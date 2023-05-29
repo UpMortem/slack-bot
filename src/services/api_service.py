@@ -1,4 +1,3 @@
-# make request to localhost:6060/api/organization/get_key with X-Shared-Secret header
 import os
 
 import requests
@@ -9,4 +8,5 @@ def get_key(team_id):
     url = f"{BASE_URL}/api/organization/get_key/{team_id}"
     headers = {"X-Shared-Secret": os.environ["API_SHARED_SECRET"]}
     response = requests.get(url=url, headers=headers, timeout=30)
-    return response.json()["key"]
+    data = response.json()
+    return {"openai_key": data["openai_key"], "slack_bot_token": data["slack_bot_token"]}
