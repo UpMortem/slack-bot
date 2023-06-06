@@ -119,8 +119,8 @@ def process_event_payload(payload):
     ts = event.get("ts")
     team_id = event.get("team")
     user = event.get("user")
-    keys = get_key(team_id)
     try:
+        keys = get_key(team_id)
         thread_to_reply = thread_ts
         if thread_ts != ts:
             thread_to_reply = ts
@@ -153,5 +153,4 @@ def process_event_payload(payload):
     except Exception as error:
         # Improve error handling
         print(error)
-        delete_message(channel, msg_ts, keys["slack_bot_token"])
         return
