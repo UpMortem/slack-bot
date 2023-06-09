@@ -4,7 +4,7 @@ import os
 import re
 from services.openai_service import respond_to_user
 from lib.retry import retry
-from .api_service import get_key
+from .api_service import get_key, revoke_token
 
 # grabs the credentials from .env directly
 slack_app = App()
@@ -41,7 +41,7 @@ def update_message(channel: str, thread_ts: str, ts: str, text: str, slack_bot_t
 def delete_message(channel: str, ts: str, slack_bot_token: str):
     response = retry(lambda: slack_app.client.chat_delete(
         token=slack_bot_token,
-        channel=channel,ts=ts
+        channel=channel, ts=ts
     ))
     return response["ts"]
 
@@ -59,6 +59,7 @@ def get_thread_messages(channel: str, thread_ts: str, slack_bot_token: str):
     except Exception as e:
         print(e)
 
+
 def get_thread_messages_with_usernames_json(channel: str, thread_ts: str, slack_bot_token: str):
     thread_messages = get_thread_messages(channel, thread_ts, slack_bot_token)
     messages_arr = [
@@ -73,7 +74,7 @@ def get_thread_messages_with_usernames_json(channel: str, thread_ts: str, slack_
 
 def find_user_by_id(user_id: str, slack_bot_token: str):
     try:
-        return retry(lambda: slack_app.client.users_info(token=slack_bot_token,user=user_id))
+        return retry(lambda: slack_app.client.users_info(token=slack_bot_token, user=user_id))
     except Exception as e:
         print(e)
 
@@ -98,7 +99,21 @@ def get_sender(payload):
     return payload.get("event").get("user")
 
 
+def handle_token_revoked(payload):
+    team_id = payload.get("team_id")
+    try:
+        revoke_token(team_id)
+    except Exception as error:
+        print(error)
+    return
+
+
 def process_event_payload(payload):
+    event = payload.get("event")
+    event_type = event.get("type")
+    if (event_type == "tokens_revoked"):
+        handle_token_revoked(payload)
+        return
     sender = get_sender(payload)
     if sender is None:
         print("sender not found")
@@ -112,7 +127,6 @@ def process_event_payload(payload):
     if sender == bot_id:
         return
 
-    event = payload.get("event")
     channel = event.get("channel")
     text = event.get("text")
     thread_ts = event.get("thread_ts")
@@ -140,7 +154,11 @@ def process_event_payload(payload):
         }]
         if thread_ts:
             messages = (
-                get_thread_messages_with_usernames_json(channel, thread_ts, keys["slack_bot_token"])
+                get_thread_messages_with_usernames_json(
+                    channel,
+                    thread_ts,
+                    keys["slack_bot_token"]
+                )
                 or messages
             )
 
