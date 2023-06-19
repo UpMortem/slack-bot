@@ -4,8 +4,9 @@ import os
 import re
 from services.openai_service import respond_to_user
 from lib.retry import retry
-from .api_service import get_key, revoke_token
-
+from .api_service import get_key, increment_request_count, revoke_token
+import traceback
+import sys
 # grabs the credentials from .env directly
 slack_app = App()
 
@@ -164,6 +165,7 @@ def process_event_payload(payload):
 
         start_time = time.perf_counter()
         response = respond_to_user(messages, keys["openai_key"])
+        increment_request_count(team_id)
         end_time = time.perf_counter()
         print(f"response generated in {round(end_time - start_time, 2)}s")
 
@@ -171,4 +173,6 @@ def process_event_payload(payload):
     except Exception as error:
         # Improve error handling
         print(error)
+        etype, value, tb = sys.exc_info()
+        print(traceback.print_exception(etype, value, tb))
         return
