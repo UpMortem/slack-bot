@@ -32,3 +32,21 @@ def revoke_token(team_id):
     if (data.get("error") is not None):
         raise Exception(data["error"])
     return
+
+
+def increment_request_count(team_id):
+    url = f"{BASE_URL}/api/slack/increment_request_count"
+    headers = {"X-Shared-Secret": os.environ["API_SHARED_SECRET"]}
+    # make post request with team id and token as data
+    response = requests.post(
+        url=url,
+        headers=headers,
+        json={
+            "team_id": team_id,
+        },
+        timeout=30
+    )
+    data = response.json()
+    if (data.get("error") is not None):
+        raise Exception(data["error"])
+    return
