@@ -165,10 +165,12 @@ def process_event_payload(payload):
 
         start_time = time.perf_counter()
         response = respond_to_user(messages, keys["openai_key"])
-        increment_request_count(team_id)
         end_time = time.perf_counter()
         print(f"response generated in {round(end_time - start_time, 2)}s")
-
+        try:
+            increment_request_count(team_id)
+        except Exception as error:
+            print(error)
         return update_message(channel, thread_to_reply, msg_ts, response, keys["slack_bot_token"])
     except Exception as error:
         # Improve error handling
