@@ -1,8 +1,9 @@
 import os
 
 import requests
-
-BASE_URL = os.environ["API_BASE_URL"]
+API_BASE_URL = "https://billing-backend.upmortem.com"
+BASE_URL = "https://billing-backend.upmortem.com"
+#BASE_URL = os.environ["API_BASE_URL"]
 
 
 def get_key(team_id):
