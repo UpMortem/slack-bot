@@ -1,9 +1,11 @@
+import urllib.request
 import os
 
 import requests
-API_BASE_URL = "https://billing-backend.upmortem.com"
-BASE_URL = "https://billing-backend.upmortem.com"
-#BASE_URL = os.environ["API_BASE_URL"]
+import json
+import urllib.parse
+
+BASE_URL = os.environ["API_BASE_URL"]
 
 
 def get_key(team_id):
@@ -37,17 +39,15 @@ def revoke_token(team_id):
 
 def increment_request_count(team_id):
     url = f"{BASE_URL}/api/slack/increment_request_count"
-    headers = {"X-Shared-Secret": os.environ["API_SHARED_SECRET"]}
-    # make post request with team id and token as data
-    response = requests.post(
-        url=url,
-        headers=headers,
-        json={
-            "team_id": team_id,
-        },
-        timeout=30
-    )
-    data = response.json()
-    if (data.get("error") is not None):
+    headers = {
+        "X-Shared-Secret": os.environ["API_SHARED_SECRET"],
+        "Content-Type": "application/json",
+    }
+    payload = json.dumps({"team_id": team_id}).encode("utf-8")
+
+    request = urllib.request.Request(url, data=payload, headers=headers)
+    response = urllib.request.urlopen(request)
+
+    data = json.loads(response.read().decode())
+    if "error" in data:
         raise Exception(data["error"])
-    return
