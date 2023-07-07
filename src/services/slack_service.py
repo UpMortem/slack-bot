@@ -4,7 +4,7 @@ import os
 import re
 from services.openai_service import respond_to_user
 from lib.retry import retry
-from .api_service import get_key, increment_request_count, revoke_token
+from .api_service import get_team_data, increment_request_count, revoke_token
 import traceback
 import sys
 # grabs the credentials from .env directly
@@ -135,19 +135,29 @@ def process_event_payload(payload):
     team_id = event.get("team")
     user = event.get("user")
     try:
-        keys = get_key(team_id)
+        team_data = get_team_data(team_id)
         thread_to_reply = thread_ts
         if thread_ts != ts:
             thread_to_reply = ts
+        print(team_data)
+
+        if team_data["has_reached_request_limit"] == True:
+            send_message(
+                channel,
+                thread_to_reply,
+                "You have reached the request limit for your OpenAI key. If you want to continue using Haly, please go to https://billing.upmortem.com to upgrade your subscription.",
+                team_data["slack_bot_token"]
+            )
+            return
 
         msg_ts = send_message(
             channel,
             thread_to_reply,
             "*Thinking...*",
-            keys["slack_bot_token"]
+            team_data["slack_bot_token"]
         )
 
-        username = get_user_name(user, keys["slack_bot_token"])
+        username = get_user_name(user, team_data["slack_bot_token"])
         messages = [{
             "role": "user",
             "content": text + ". " + username,
@@ -158,20 +168,20 @@ def process_event_payload(payload):
                 get_thread_messages_with_usernames_json(
                     channel,
                     thread_ts,
-                    keys["slack_bot_token"]
+                    team_data["slack_bot_token"]
                 )
                 or messages
             )
 
         start_time = time.perf_counter()
-        response = respond_to_user(messages, keys["openai_key"])
+        response = respond_to_user(messages, team_data["openai_key"])
         end_time = time.perf_counter()
         print(f"response generated in {round(end_time - start_time, 2)}s")
         try:
             increment_request_count(team_id)
         except Exception as error:
             print(error)
-        return update_message(channel, thread_to_reply, msg_ts, response, keys["slack_bot_token"])
+        return update_message(channel, thread_to_reply, msg_ts, response, team_data["slack_bot_token"])
     except Exception as error:
         # Improve error handling
         print(error)
