@@ -139,7 +139,6 @@ def process_event_payload(payload):
         thread_to_reply = thread_ts
         if thread_ts != ts:
             thread_to_reply = ts
-        print(team_data)
 
         if team_data["has_reached_request_limit"] == True:
             send_message(
