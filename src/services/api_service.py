@@ -15,7 +15,12 @@ def get_team_data(team_id):
     data = response.json()
     if (data.get("error") is not None):
         raise Exception(data["error"])
-    return {"openai_key": data["openai_key"], "slack_bot_token": data["slack_bot_token"], "has_reached_request_limit": data["has_reached_request_limit"]}
+    return {
+        "openai_key": data["openai_key"],
+        "slack_bot_token": data["slack_bot_token"],
+        "has_reached_request_limit": data["has_reached_request_limit"],
+        "owner_email": data["owner_email"],
+    }
 
 
 def revoke_token(team_id):

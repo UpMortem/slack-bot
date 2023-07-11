@@ -144,7 +144,7 @@ def process_event_payload(payload):
             send_message(
                 channel,
                 thread_to_reply,
-                "You have reached the request limit for your OpenAI key. If you want to continue using Haly, please go to https://billing.upmortem.com to upgrade your subscription.",
+                f"It appears you've exceeded the usage limit. To continue enjoying our services without interruption, kindly get in touch with your organization's administrator on {team_data['owner_email']} and request for a subscription upgrade.",
                 team_data["slack_bot_token"]
             )
             return
