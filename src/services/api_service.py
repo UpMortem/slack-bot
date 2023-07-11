@@ -5,9 +5,12 @@ import requests
 import json
 import urllib.parse
 
+from lib.guards import time_tracker
+
 BASE_URL = os.environ["API_BASE_URL"]
 
 
+@time_tracker
 def get_team_data(team_id):
     url = f"{BASE_URL}/api/organization/get_team_data/{team_id}"
     headers = {"X-Shared-Secret": os.environ["API_SHARED_SECRET"]}
@@ -42,6 +45,7 @@ def revoke_token(team_id):
     return
 
 
+@time_tracker
 def increment_request_count(team_id):
     url = f"{BASE_URL}/api/slack/increment_request_count"
     headers = {

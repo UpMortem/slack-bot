@@ -2,6 +2,7 @@ from slack_bolt import App
 import time
 import os
 import re
+from lib.guards import time_tracker
 from services.openai_service import respond_to_user
 from lib.retry import retry
 from .api_service import get_team_data, increment_request_count, revoke_token
@@ -47,6 +48,7 @@ def delete_message(channel: str, ts: str, slack_bot_token: str):
     return response["ts"]
 
 
+@time_tracker
 def get_thread_messages(channel: str, thread_ts: str, slack_bot_token: str):
     try:
         return retry(
