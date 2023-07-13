@@ -27,6 +27,7 @@ def send_message(channel: str, thread_ts: str, text: str, slack_bot_token: str):
     return response["ts"]
 
 
+@time_tracker
 def update_message(channel: str, thread_ts: str, ts: str, text: str, slack_bot_token: str):
     response = retry(
         lambda: slack_app.client.chat_update(
@@ -112,6 +113,7 @@ def handle_token_revoked(payload):
 
 
 def process_event_payload(payload):
+    print("processing event payload")
     event = payload.get("event")
     event_type = event.get("type")
     if (event_type == "tokens_revoked"):
@@ -137,7 +139,9 @@ def process_event_payload(payload):
     team_id = event.get("team")
     user = event.get("user")
     try:
+        print("Getting team data")
         team_data = get_team_data(team_id)
+        print("Getting team data FINISH")
         thread_to_reply = thread_ts
         if thread_ts != ts:
             thread_to_reply = ts
@@ -151,6 +155,7 @@ def process_event_payload(payload):
             )
             return
 
+        print("Sending 'Thinking...' message")
         msg_ts = send_message(
             channel,
             thread_to_reply,
@@ -158,12 +163,15 @@ def process_event_payload(payload):
             team_data["slack_bot_token"]
         )
 
+        print("Getting username")
         username = get_user_name(user, team_data["slack_bot_token"])
         messages = [{
             "role": "user",
             "content": text + ". " + username,
             "name": re.sub(r"\s", "_", username),
         }]
+
+        print("Getting thread messages")
         if thread_ts:
             messages = (
                 get_thread_messages_with_usernames_json(
@@ -173,11 +181,11 @@ def process_event_payload(payload):
                 )
                 or messages
             )
+        print("Getting thread messages finish")
 
-        start_time = time.perf_counter()
+        print("Responding to user")
         response = respond_to_user(messages, team_data["openai_key"])
-        end_time = time.perf_counter()
-        print(f"response generated in {round(end_time - start_time, 2)}s")
+        print("Responding to user FINISH")
         try:
             increment_request_count(team_id)
         except Exception as error:
