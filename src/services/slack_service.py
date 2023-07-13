@@ -186,10 +186,10 @@ def process_event_payload(payload):
         print("Responding to user")
         response = respond_to_user(messages, team_data["openai_key"])
         print("Responding to user FINISH")
-        try:
-            increment_request_count(team_id)
-        except Exception as error:
-            print(error)
+        # try:
+        #     increment_request_count(team_id)
+        # except Exception as error:
+        #     print(error)
         return update_message(channel, thread_to_reply, msg_ts, response, team_data["slack_bot_token"])
     except Exception as error:
         # Improve error handling
