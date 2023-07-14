@@ -184,7 +184,8 @@ def process_event_payload(payload):
         print("Getting thread messages finish")
 
         print("Responding to user")
-        response = respond_to_user(messages, team_data["openai_key"])
+        key = team_data["openai_key"] if team_data["openai_key"] else os.environ["OPENAI_API_KEY"]
+        response = respond_to_user(messages, key)
         print("Responding to user FINISH")
         # try:
         #     increment_request_count(team_id)
