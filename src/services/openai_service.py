@@ -15,7 +15,6 @@ You are in a conversation with multiple users. \
 Users will sign their messages with their names, you won't"
 
 
-@time_tracker
 def run_completion(slack_messages, openai_key):
     openai.api_key = openai_key
     messages = [

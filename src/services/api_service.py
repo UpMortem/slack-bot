@@ -11,7 +11,6 @@ BASE_URL = os.environ["API_BASE_URL"]
 SHARED_SECRET = os.environ["API_SHARED_SECRET"]
 
 
-@time_tracker
 def get_team_data(team_id):
     url = f"{BASE_URL}/api/organization/get_team_data/{team_id}"
     headers = {"X-Shared-Secret": SHARED_SECRET}
@@ -46,7 +45,6 @@ def revoke_token(team_id):
     return
 
 
-@time_tracker
 def increment_request_count(team_id):
     url = f"{BASE_URL}/api/slack/increment_request_count"
     headers = {

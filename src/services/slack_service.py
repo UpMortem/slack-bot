@@ -27,7 +27,6 @@ def send_message(channel: str, thread_ts: str, text: str, slack_bot_token: str):
     return response["ts"]
 
 
-@time_tracker
 def update_message(channel: str, thread_ts: str, ts: str, text: str, slack_bot_token: str):
     response = retry(
         lambda: slack_app.client.chat_update(
@@ -49,7 +48,6 @@ def delete_message(channel: str, ts: str, slack_bot_token: str):
     return response["ts"]
 
 
-@time_tracker
 def get_thread_messages(channel: str, thread_ts: str, slack_bot_token: str):
     try:
         return retry(
@@ -83,7 +81,6 @@ def find_user_by_id(user_id: str, slack_bot_token: str):
         print(e)
 
 
-@time_tracker
 def get_user_name(user_id: str, slack_bot_token: str):
     if user_id not in users_map:
         user = find_user_by_id(user_id, slack_bot_token)
