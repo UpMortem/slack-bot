@@ -8,12 +8,13 @@ import urllib.parse
 from lib.guards import time_tracker
 
 BASE_URL = os.environ["API_BASE_URL"]
+SHARED_SECRET = os.environ["API_SHARED_SECRET"]
 
 
 @time_tracker
 def get_team_data(team_id):
     url = f"{BASE_URL}/api/organization/get_team_data/{team_id}"
-    headers = {"X-Shared-Secret": os.environ["API_SHARED_SECRET"]}
+    headers = {"X-Shared-Secret": SHARED_SECRET}
     response = requests.get(url=url, headers=headers, timeout=30)
     data = response.json()
     if (data.get("error") is not None):
