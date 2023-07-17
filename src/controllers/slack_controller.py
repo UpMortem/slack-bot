@@ -1,7 +1,7 @@
 import time
 import socket
 import ssl
-
+import os
 
 from flask import jsonify
 from services.slack_service import (
@@ -24,12 +24,12 @@ def make_ssl_connection(host, port):
 
 # POST /slack/events
 def post_event(request):
-    host = "api.openai.com"
-    resolution_time = resolve_host(host)
-    print("It took %.2f seconds to resolve %s." % (resolution_time, host))
-    port = 443
-    connection_time = make_ssl_connection(host, port)
-    print("It took %.2f seconds to make an SSL connection to %s." % (connection_time, host))
+    # host = "api.openai.com"
+    # resolution_time = resolve_host(host)
+    # print("It took %.2f seconds to resolve %s." % (resolution_time, host))
+    # port = 443
+    # connection_time = make_ssl_connection(host, port)
+    # print("It took %.2f seconds to make an SSL connection to %s." % (connection_time, host))
     
     if request.get("type") == "url_verification":
         return request.get("challenge")

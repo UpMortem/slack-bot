@@ -155,12 +155,12 @@ def process_event_payload(payload):
         slack_bot_token = os.environ["SLACK_BOT_TOKEN"]
         # slack_bot_token = team_data["slack_bot_token"]
 
-        msg_ts = send_message(
-            channel,
-            thread_to_reply,
-            "*Thinking...*",
-            slack_bot_token
-        )
+        # msg_ts = send_message(
+        #     channel,
+        #     thread_to_reply,
+        #     "*Thinking...*",
+        #     slack_bot_token
+        # )
 
         username = get_user_name(user, slack_bot_token)
         messages = [{
@@ -186,7 +186,13 @@ def process_event_payload(payload):
         #     increment_request_count(team_id)
         # except Exception as error:
         #     print(error)
-        return update_message(channel, thread_to_reply, msg_ts, response, slack_bot_token)
+        send_message(
+            channel,
+            thread_to_reply,
+            response,
+            slack_bot_token
+        )
+        # return update_message(channel, thread_to_reply, msg_ts, response, slack_bot_token)
     except Exception as error:
         # Improve error handling
         print(error)
