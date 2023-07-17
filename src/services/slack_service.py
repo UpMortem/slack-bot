@@ -83,6 +83,7 @@ def find_user_by_id(user_id: str, slack_bot_token: str):
         print(e)
 
 
+@time_tracker
 def get_user_name(user_id: str, slack_bot_token: str):
     if user_id not in users_map:
         user = find_user_by_id(user_id, slack_bot_token)
@@ -113,7 +114,6 @@ def handle_token_revoked(payload):
 
 
 def process_event_payload(payload):
-    print("processing event payload")
     event = payload.get("event")
     event_type = event.get("type")
     if (event_type == "tokens_revoked"):
@@ -121,7 +121,6 @@ def process_event_payload(payload):
         return
     sender = get_sender(payload)
     if sender is None:
-        print("sender not found")
         return
 
     bot_id = find_bot_id(payload)
@@ -139,59 +138,55 @@ def process_event_payload(payload):
     team_id = event.get("team")
     user = event.get("user")
     try:
-        print("Getting team data")
-        team_data = get_team_data(team_id)
-        print("Getting team data FINISH")
+        # team_data = get_team_data(team_id)
         thread_to_reply = thread_ts
         if thread_ts != ts:
             thread_to_reply = ts
 
-        if team_data["has_reached_request_limit"] == True:
-            send_message(
-                channel,
-                thread_to_reply,
-                f"It appears you've exceeded the usage limit. To continue enjoying our services without interruption, kindly get in touch with your organization's administrator on {team_data['owner_email']} and request for a subscription upgrade.",
-                team_data["slack_bot_token"]
-            )
-            return
+        # if team_data["has_reached_request_limit"] == True:
+        #     send_message(
+        #         channel,
+        #         thread_to_reply,
+        #         f"It appears you've exceeded the usage limit. To continue enjoying our services without interruption, kindly get in touch with your organization's administrator on {team_data['owner_email']} and request for a subscription upgrade.",
+        #         team_data["slack_bot_token"]
+        #     )
+        #     return
 
-        print("Sending 'Thinking...' message")
+        slack_bot_token = os.environ["SLACK_BOT_TOKEN"]
+        # slack_bot_token = team_data["slack_bot_token"]
+
         msg_ts = send_message(
             channel,
             thread_to_reply,
             "*Thinking...*",
-            team_data["slack_bot_token"]
+            slack_bot_token
         )
 
-        print("Getting username")
-        username = get_user_name(user, team_data["slack_bot_token"])
+        username = get_user_name(user, slack_bot_token)
         messages = [{
             "role": "user",
             "content": text + ". " + username,
             "name": re.sub(r"\s", "_", username),
         }]
 
-        print("Getting thread messages")
         if thread_ts:
             messages = (
                 get_thread_messages_with_usernames_json(
                     channel,
                     thread_ts,
-                    team_data["slack_bot_token"]
+                    slack_bot_token
                 )
                 or messages
             )
-        print("Getting thread messages finish")
 
-        print("Responding to user")
-        key = team_data["openai_key"] if team_data["openai_key"] else os.environ["OPENAI_API_KEY"]
+        # key = team_data["openai_key"] if team_data["openai_key"] else os.environ["OPENAI_API_KEY"]
+        key = os.environ["OPENAI_API_KEY"]
         response = respond_to_user(messages, key)
-        print("Responding to user FINISH")
         # try:
         #     increment_request_count(team_id)
         # except Exception as error:
         #     print(error)
-        return update_message(channel, thread_to_reply, msg_ts, response, team_data["slack_bot_token"])
+        return update_message(channel, thread_to_reply, msg_ts, response, slack_bot_token)
     except Exception as error:
         # Improve error handling
         print(error)
