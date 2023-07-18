@@ -5,9 +5,7 @@ import re
 from lib.guards import time_tracker
 from services.openai_service import respond_to_user
 from lib.retry import retry
-from .api_service import get_team_data, increment_request_count, revoke_token
-import traceback
-import sys
+from .api_service import get_team_data, revoke_token
 # grabs the credentials from .env directly
 slack_app = App()
 
@@ -193,6 +191,4 @@ def process_event_payload(payload):
     except Exception as error:
         # Improve error handling
         print(error)
-        etype, value, tb = sys.exc_info()
-        print(traceback.print_exception(etype, value, tb))
         return

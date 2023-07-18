@@ -1,11 +1,5 @@
-import urllib.request
 import os
-
 import requests
-import json
-import urllib.parse
-
-from lib.guards import time_tracker
 
 BASE_URL = os.environ["API_BASE_URL"]
 SHARED_SECRET = os.environ["API_SHARED_SECRET"]
@@ -45,17 +39,17 @@ def revoke_token(team_id):
     return
 
 
-def increment_request_count(team_id):
-    url = f"{BASE_URL}/api/slack/increment_request_count"
-    headers = {
-        "X-Shared-Secret": os.environ["API_SHARED_SECRET"],
-        "Content-Type": "application/json",
-    }
-    payload = json.dumps({"team_id": team_id}).encode("utf-8")
+# def increment_request_count(team_id):
+#     url = f"{BASE_URL}/api/slack/increment_request_count"
+#     headers = {
+#         "X-Shared-Secret": os.environ["API_SHARED_SECRET"],
+#         "Content-Type": "application/json",
+#     }
+#     payload = json.dumps({"team_id": team_id}).encode("utf-8")
 
-    request = urllib.request.Request(url, data=payload, headers=headers)
-    response = urllib.request.urlopen(request)
+#     request = urllib.request.Request(url, data=payload, headers=headers)
+#     response = urllib.request.urlopen(request)
 
-    data = json.loads(response.read().decode())
-    if "error" in data:
-        raise Exception(data["error"])
+#     data = json.loads(response.read().decode())
+#     if "error" in data:
+#         raise Exception(data["error"])
