@@ -1,8 +1,9 @@
 from threading import Thread
-from slack_bolt import App
+from typing import Callable
 import time
 import os
 import re
+from slack_bolt import App, Say, BoltContext
 from services.openai_service import respond_to_user
 from lib.retry import retry
 from .api_service import get_team_data, increment_request_count, revoke_token
@@ -10,21 +11,7 @@ from .api_service import get_team_data, increment_request_count, revoke_token
 # grabs the credentials from .env directly
 slack_app = App()
 
-
 users_map = {}
-
-
-def send_message(channel: str, thread_ts: str, text: str, slack_bot_token: str):
-    response = retry(
-        lambda: slack_app.client.chat_postMessage(
-            token=slack_bot_token,
-            channel=channel,
-            text=text,
-            thread_ts=thread_ts,
-        )
-    )
-    return response["ts"]
-
 
 def update_message(channel: str, thread_ts: str, ts: str, text: str, slack_bot_token: str):
     response = retry(
@@ -86,21 +73,19 @@ def get_user_name(user_id: str, slack_bot_token: str):
         users_map[user_id] = user["user"]["profile"]["real_name"]
     return users_map[user_id].capitalize()
 
+def no_bot_messages(message) -> bool:
+    return message.get("bot_id") is None if message else True
 
-def find_bot_id(payload):
-    for auth in payload["authorizations"]:
-        # Check if the current authorization is a bot
-        if auth["is_bot"]:
-            return auth["user_id"]
-
-    return None
+def no_message_changed(event) -> bool:
+    return event.get("subtype") != "message_changed" and event.get("edited") is None
 
 
-def get_sender(payload):
-    return payload.get("event").get("user")
+#########################################
+# Event Handlers
+#########################################
 
-
-def handle_token_revoked(payload):
+@slack_app.event("tokens_revoked")
+def handle_tokens_revoked(payload, logger):
     team_id = payload.get("team_id")
     try:
         revoke_token(team_id)
@@ -108,26 +93,9 @@ def handle_token_revoked(payload):
         print(error)
     return
 
-
-def process_event_payload(payload):
-    event = payload.get("event")
-    event_type = event.get("type")
-    if (event_type == "tokens_revoked"):
-        handle_token_revoked(payload)
-        return
-    sender = get_sender(payload)
-    if sender is None:
-        print("sender not found")
-        return
-
-    bot_id = find_bot_id(payload)
-    if not bot_id:
-        print("botId not found")
-        return
-
-    if sender == bot_id:
-        return
-
+@slack_app.event(event={"type": re.compile("(message)|(app_mention)"), "subtype": None},  matchers=[no_bot_messages, no_message_changed])
+def handle_app_mention(event, say):
+    print(event)
     channel = event.get("channel")
     text = event.get("text")
     thread_ts = event.get("thread_ts")
@@ -135,9 +103,8 @@ def process_event_payload(payload):
     team_id = event.get("team")
     user = event.get("user")
     try:
-        thread_to_reply = thread_ts
-        if thread_ts != ts:
-            thread_to_reply = ts
+        # Check if message is already in a thread, if it is, reply to that thread, else reply to the message in a new thread
+        thread_to_reply = ts if thread_ts != ts else thread_ts
 
         # Get neccessary keys
         team_data = get_team_data(team_id)
@@ -146,22 +113,23 @@ def process_event_payload(payload):
 
         # Check quota
         if team_data["has_reached_request_limit"] == True:
-            send_message(
-                channel,
-                thread_to_reply,
-                f"It appears you've exceeded the usage limit. To continue enjoying our services without interruption, kindly get in touch with your organization's administrator on {team_data['owner_email']} and request for a subscription upgrade.",
-                slack_bot_token
+            say(
+                channel=channel,
+                thread_ts=thread_to_reply,
+                text=f"It appears you've exceeded the usage limit. To continue enjoying our services without interruption, kindly get in touch with your organization's administrator on {team_data['owner_email']} and request for a subscription upgrade.",
+                token=slack_bot_token
             )
             return
 
         # Send 'thinking' message while we process the request
-        msg_ts = send_message(
-            channel,
-            thread_to_reply,
-            "*Thinking...*",
-            slack_bot_token
+        response = say(
+            channel=channel,
+            thread_ts=thread_to_reply,
+            text="Thinking...",
+            token=slack_bot_token
         )
-
+        msg_ts = response["ts"]
+        
         # Get messages in thread
         username = get_user_name(user, slack_bot_token)
         messages = [{
@@ -191,3 +159,11 @@ def process_event_payload(payload):
         # Improve error handling
         print(error)
         return
+
+@slack_app.event("message")
+def handle_message_events(body, logger):
+    logger.info(body)
+
+@slack_app.event("app_mention")
+def handle_message_events(body, logger):
+    logger.info(body)
