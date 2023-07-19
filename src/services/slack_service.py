@@ -1,10 +1,11 @@
+from threading import Thread
 from slack_bolt import App
 import time
 import os
 import re
 from services.openai_service import respond_to_user
 from lib.retry import retry
-from .api_service import get_key, revoke_token
+from .api_service import get_team_data, increment_request_count, revoke_token
 
 # grabs the credentials from .env directly
 slack_app = App()
@@ -134,19 +135,35 @@ def process_event_payload(payload):
     team_id = event.get("team")
     user = event.get("user")
     try:
-        keys = get_key(team_id)
         thread_to_reply = thread_ts
         if thread_ts != ts:
             thread_to_reply = ts
 
+        # Get neccessary keys
+        team_data = get_team_data(team_id)
+        slack_bot_token = team_data["slack_bot_token"]
+        openAi_key = team_data["openai_key"] if team_data["openai_key"] else os.environ["OPENAI_API_KEY"]
+
+        # Check quota
+        if team_data["has_reached_request_limit"] == True:
+            send_message(
+                channel,
+                thread_to_reply,
+                f"It appears you've exceeded the usage limit. To continue enjoying our services without interruption, kindly get in touch with your organization's administrator on {team_data['owner_email']} and request for a subscription upgrade.",
+                slack_bot_token
+            )
+            return
+
+        # Send 'thinking' message while we process the request
         msg_ts = send_message(
             channel,
             thread_to_reply,
             "*Thinking...*",
-            keys["slack_bot_token"]
+            slack_bot_token
         )
 
-        username = get_user_name(user, keys["slack_bot_token"])
+        # Get messages in thread
+        username = get_user_name(user, slack_bot_token)
         messages = [{
             "role": "user",
             "content": text + ". " + username,
@@ -157,17 +174,19 @@ def process_event_payload(payload):
                 get_thread_messages_with_usernames_json(
                     channel,
                     thread_ts,
-                    keys["slack_bot_token"]
+                    slack_bot_token
                 )
                 or messages
             )
 
         start_time = time.perf_counter()
-        response = respond_to_user(messages, keys["openai_key"])
+        response = respond_to_user(messages, openAi_key)
         end_time = time.perf_counter()
-        print(f"response generated in {round(end_time - start_time, 2)}s")
 
-        return update_message(channel, thread_to_reply, msg_ts, response, keys["slack_bot_token"])
+        print(f"response generated in {round(end_time - start_time, 2)}s")
+        Thread(target=increment_request_count, args=(team_id,)).start()
+        
+        return update_message(channel, thread_to_reply, msg_ts, response, slack_bot_token)
     except Exception as error:
         # Improve error handling
         print(error)
