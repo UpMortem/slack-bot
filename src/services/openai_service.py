@@ -1,7 +1,5 @@
 import openai
 from openai.error import AuthenticationError, RateLimitError
-import os
-from services.api_service import get_key
 
 # openai.api_key = os.environ["OPENAI_API_KEY"]
 
