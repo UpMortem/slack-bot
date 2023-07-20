@@ -4,7 +4,8 @@ from flask import Flask, request
 from slack_bolt.adapter.flask import SlackRequestHandler
 from services.slack_service import slack_app
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=os.environ["LOG_LEVEL"])
+
 
 flask_app = Flask("Haly")
 handler = SlackRequestHandler(slack_app)

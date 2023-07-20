@@ -11,7 +11,8 @@ import logging
 
 # grabs the credentials from .env directly
 slack_app = App()
-logging.basicConfig(level=logging.DEBUG)
+
+logging.basicConfig(level=os.environ["LOG_LEVEL"])
 
 users_map = {}
 
@@ -87,8 +88,8 @@ def no_message_changed(event) -> bool:
 #########################################
 
 @slack_app.event("tokens_revoked")
-def handle_tokens_revoked(payload, logger):
-    team_id = payload.get("team_id")
+def handle_tokens_revoked(body, logger):
+    team_id = body.get("team_id")
     try:
         revoke_token(team_id)
     except Exception as error:
@@ -164,12 +165,12 @@ def handle_app_mention(event, say):
 
 @slack_app.event("message")
 def handle_message_events(body, logger):
-    logger.info(body)
+    logger.debug(body)
 
 @slack_app.event("app_mention")
 def handle_message_events(body, logger):
-    logger.info(body)
+    logger.debug(body)
 
 @slack_app.event("app_uninstalled")
 def handle_app_uninstalled_events(body, logger):
-    logger.info(body)
+    logger.debug(body)
