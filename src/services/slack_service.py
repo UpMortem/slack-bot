@@ -7,9 +7,11 @@ from slack_bolt import App, Say, BoltContext
 from services.openai_service import respond_to_user
 from lib.retry import retry
 from .api_service import get_team_data, increment_request_count, revoke_token
+import logging
 
 # grabs the credentials from .env directly
 slack_app = App()
+logging.basicConfig(level=logging.DEBUG)
 
 users_map = {}
 
@@ -95,7 +97,6 @@ def handle_tokens_revoked(payload, logger):
 
 @slack_app.event(event={"type": re.compile("(message)|(app_mention)"), "subtype": None},  matchers=[no_bot_messages, no_message_changed])
 def handle_app_mention(event, say):
-    print(event)
     channel = event.get("channel")
     text = event.get("text")
     thread_ts = event.get("thread_ts")
@@ -150,8 +151,9 @@ def handle_app_mention(event, say):
         start_time = time.perf_counter()
         response = respond_to_user(messages, openAi_key)
         end_time = time.perf_counter()
-
         print(f"response generated in {round(end_time - start_time, 2)}s")
+
+        # Increment request count in a new Thread
         Thread(target=increment_request_count, args=(team_id,)).start()
         
         return update_message(channel, thread_to_reply, msg_ts, response, slack_bot_token)
@@ -166,4 +168,8 @@ def handle_message_events(body, logger):
 
 @slack_app.event("app_mention")
 def handle_message_events(body, logger):
+    logger.info(body)
+
+@slack_app.event("app_uninstalled")
+def handle_app_uninstalled_events(body, logger):
     logger.info(body)
