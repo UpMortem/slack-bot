@@ -171,7 +171,6 @@ def handle_app_mention(event, say):
 @slack_app.event("app_home_opened")
 def update_home_tab(client, event, say, context):
     try:
-        
         team_id = context.get("team_id")
         team_data = get_team_data(team_id)
         current_user = event["user"]
@@ -199,8 +198,11 @@ def update_home_tab(client, event, say, context):
                     "text": "Upgrade",
                 },
                 "url": "https://billing.upmortem.com/pricing",
+                "action_id": "upgrade_plan",
+
             }
 
+        # Messages count section
         messages_section = {
             "type": "context",
             "elements" : [
@@ -210,11 +212,25 @@ def update_home_tab(client, event, say, context):
                 },
             ]
         }
+
+        # Info section
+        info_section = {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "I'm Haly, your friendly Slack chatbot. I'm here to help you with any questions or problems you might have. I'm an expert in everything, so feel free to ask me anything. I'm a good listener and always ready to assist you. Just type your question or request, and I'll do my best to provide you with the information you need. You can direct message me or add me to a public channel. Just tag me to talk with me with @Haly.",
+            },
+        }
+
         row1_blocks = [
             current_plan_section,
             {
                 "type": "divider"
-            }
+            },
+            info_section,
+            {
+                "type": "divider"
+            },
         ]
         if has_free_plan:
             row1_blocks.append(messages_section)
@@ -270,6 +286,11 @@ def handle_some_action(ack, body, logger):
     logger.debug(body)
 
 @slack_app.action("email_support")
+def handle_some_action(ack, body, logger):
+    ack()
+    logger.debug(body)
+
+@slack_app.action("upgrade_plan")
 def handle_some_action(ack, body, logger):
     ack()
     logger.debug(body)
