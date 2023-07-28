@@ -198,7 +198,7 @@ def update_home_tab(client, event, say, context):
                     "type": "plain_text",
                     "text": "Upgrade",
                 },
-                "action_id": "upgrade_button",
+                "url": "https://billing.upmortem.com/pricing",
             }
 
         messages_section = {
@@ -261,118 +261,6 @@ def update_home_tab(client, event, say, context):
 
     except Exception as e:
         print("Error publishing home tab view:", e)
-
-
-# Upgrade Button action
-@slack_app.action("upgrade_button")
-def handle_upgrade_button(ack, say):
-    ack()
-    say("You have clicked the Upgrade button. Redirecting you to the upgrade page...")
-    # Add logic here to handle the upgrade action (e.g., redirect the user to an upgrade page)
-
-
-@slack_app.action("go_to_dashboard_button")
-def handle_go_to_dashboard_button(ack, body, say, context):
-    ack()
-    # print(json.dumps(body, indent=4))
-    print(context)
-
-    # Respond with a message before opening the browser window
-    say("You have clicked the Go to Haly Dashboard button. Redirecting you to the Haly Dashboard...")
-
-    # Add logic here to handle the action (e.g., redirect the user to the Haly Dashboard)
-    # You can use a link to the dashboard URL, or you may open a specific page using JavaScript redirect.
-    # For example:
-    dashboard_url = "https://billing.upmortem.com/"
-    browser_link = f"<{dashboard_url}|Click here to go to the Haly Dashboard>"
-    say(browser_link)
-
-# FAQs Button action (Opens a modal with FAQs)
-@slack_app.action("open_faq_modal_button")
-def handle_open_faq_modal_button(ack, body, client):
-    ack()
-
-    # Add your FAQ content here
-    faq_modal = {
-        "type": "modal",
-        "title": {"type": "plain_text", "text": "FAQs"},
-        "blocks": [
-            {
-                "type": "section",
-                "text": {
-                    "type": "plain_text",
-                    "text": "Q: How do I reset my password?",
-                },
-            },
-            {
-                "type": "section",
-                "text": {
-                    "type": "plain_text",
-                    "text": "A: To reset your password, follow these steps...",
-                },
-            },
-            # Add more FAQ blocks as needed
-        ],
-        "close": {"type": "plain_text", "text": "Close"},
-    }
-
-    try:
-        client.views_open(trigger_id=body["trigger_id"], view=faq_modal)
-    except Exception as e:
-        print("Error opening FAQs modal:", e)
-
-
-# Contact Us Button action (Opens a form for submitting a request)
-@slack_app.action("open_contact_form_button")
-def handle_open_contact_form_button(ack, body, client):
-    ack()
-
-    contact_form = {
-        "type": "modal",
-        "title": {"type": "plain_text", "text": "Contact Us"},
-        "blocks": [
-            {
-                "type": "input",
-                "block_id": "name",
-                "element": {
-                    "type": "plain_text_input",
-                    "action_id": "name_input",
-                    "placeholder": {
-                        "type": "plain_text",
-                        "text": "Your Name",
-                    },
-                },
-                "label": {
-                    "type": "plain_text",
-                    "text": "Name",
-                },
-            },
-            {
-                "type": "input",
-                "block_id": "email",
-                "element": {
-                    "type": "plain_text_input",
-                    "action_id": "email_input",
-                    "placeholder": {
-                        "type": "plain_text",
-                        "text": "example@example.com",
-                    },
-                },
-                "label": {
-                    "type": "plain_text",
-                    "text": "Email",
-                },
-            },
-            # Add more input blocks as needed
-        ],
-        "submit": {"type": "plain_text", "text": "Submit"},
-        "callback_id": "contact_form_submission",  # Unique identifier for the action
-    }
-
-    try:
-        client.views_open(trigger_id=body["trigger_id"], view=contact_form)
-    except Exception as e:
-        print("Error opening contact form:", e)
 
 @slack_app.event("message")
 def handle_message_events(body, logger):
