@@ -226,6 +226,7 @@ def update_home_tab(client, event, say, context):
                 "text": "🌐 Go to Dashboard",
                 "emoji": True
             },
+            "action_id": "go_to_dashboard",
             "url": "https://billing.upmortem.com",
         }
         contact_support_button = {
@@ -235,6 +236,7 @@ def update_home_tab(client, event, say, context):
                 "text": "✉️ Contact support",
                 "emoji": True
             },
+            "action_id": "email_support",
             "url": "mailto:support@upmortem.com",
         }
         elements = [
@@ -261,6 +263,16 @@ def update_home_tab(client, event, say, context):
 
     except Exception as e:
         print("Error publishing home tab view:", e)
+
+@slack_app.action("go_to_dashboard")
+def handle_some_action(ack, body, logger):
+    ack()
+    logger.debug(body)
+
+@slack_app.action("email_support")
+def handle_some_action(ack, body, logger):
+    ack()
+    logger.debug(body)
 
 @slack_app.event("message")
 def handle_message_events(body, logger):
