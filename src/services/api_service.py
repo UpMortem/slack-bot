@@ -19,6 +19,9 @@ def get_team_data(team_id):
         "slack_bot_token": data["slack_bot_token"],
         "has_reached_request_limit": data["has_reached_request_limit"],
         "owner_email": data["owner_email"],
+        "owner_slack_id": data["owner_slack_id"],
+        "request_count": data["request_count"],
+        "product_name": data["product_name"],
     }
 
 
