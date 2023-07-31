@@ -257,7 +257,7 @@ def update_home_tab(client, event, say, context):
         elements = [
             contact_support_button
         ]
-        if has_free_plan:
+        if current_user == owner_user:
             elements.insert(0, go_to_dashboard_button)
 
         row2_blocks = [
