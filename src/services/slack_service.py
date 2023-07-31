@@ -1,3 +1,4 @@
+import json
 from threading import Thread
 from typing import Callable
 import time
@@ -8,6 +9,8 @@ from services.openai_service import respond_to_user
 from lib.retry import retry
 from .api_service import get_team_data, increment_request_count, revoke_token
 import logging
+
+DAILY_MESSAGE_LIMIT = 10
 
 # grabs the credentials from .env directly
 slack_app = App()
@@ -162,6 +165,135 @@ def handle_app_mention(event, say):
         # Improve error handling
         print(error)
         return
+
+
+# Respond to the App Home opened event
+@slack_app.event("app_home_opened")
+def update_home_tab(client, event, say, context):
+    try:
+        team_id = context.get("team_id")
+        team_data = get_team_data(team_id)
+        current_user = event["user"]
+        owner_user = team_data["owner_slack_id"]
+
+        # print(json.dumps(event, indent=4))
+        # Get the user's plan information (Replace this with your logic to fetch the user's plan)
+        request_count = team_data["request_count"]
+        product_name = team_data["product_name"]
+        has_free_plan = product_name == "Free plan"
+
+        # Row 1: Current Plan and Upgrade Button
+        current_plan_section = {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": f"*{product_name}* ",
+            },
+        }
+        if has_free_plan and current_user == owner_user:
+            current_plan_section["accessory"] = {
+                "type": "button",
+                "text": {
+                    "type": "plain_text",
+                    "text": "Upgrade",
+                },
+                "url": "https://billing.upmortem.com/pricing",
+                "action_id": "upgrade_plan",
+
+            }
+
+        # Messages count section
+        messages_section = {
+            "type": "context",
+            "elements" : [
+                {
+                    "type": "mrkdwn",
+                    "text": f"`{request_count * '█'}{(DAILY_MESSAGE_LIMIT - request_count) * '⁢ ⁢'}`    *{request_count}/{DAILY_MESSAGE_LIMIT} daily messages used*",
+                },
+            ]
+        }
+
+        # Info section
+        info_section = {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "I'm Haly, your friendly Slack chatbot. I'm here to help you with any questions or problems you might have. I'm an expert in everything, so feel free to ask me anything. I'm a good listener and always ready to assist you. Just type your question or request, and I'll do my best to provide you with the information you need. You can direct message me or add me to a public channel. Just tag me to talk with me with @Haly.",
+            },
+        }
+
+        row1_blocks = [
+            current_plan_section,
+            {
+                "type": "divider"
+            },
+            info_section,
+            {
+                "type": "divider"
+            },
+        ]
+        if has_free_plan:
+            row1_blocks.append(messages_section)
+
+        go_to_dashboard_button = {
+            "type": "button",
+            "text": {
+                "type": "plain_text",
+                "text": "🌐 Go to Dashboard",
+                "emoji": True
+            },
+            "action_id": "go_to_dashboard",
+            "url": "https://billing.upmortem.com",
+        }
+        contact_support_button = {
+            "type": "button",
+            "text": {
+                "type": "plain_text",
+                "text": "✉️ Contact support",
+                "emoji": True
+            },
+            "action_id": "email_support",
+            "url": "mailto:support@upmortem.com",
+        }
+        elements = [
+            contact_support_button
+        ]
+        if has_free_plan:
+            elements.insert(0, go_to_dashboard_button)
+
+        row2_blocks = [
+            {
+                "type": "actions",
+                "elements": elements
+            }
+        ]
+
+        # Combine both rows into the Home Tab view
+        home_tab_content = {
+            "type": "home",
+            "blocks": [*row1_blocks, *row2_blocks],
+        }
+
+        # Publish the updated Home Tab view
+        client.views_publish(user_id=event["user"], view=home_tab_content, token=team_data["slack_bot_token"])
+
+    except Exception as e:
+        print("Error publishing home tab view:", e)
+
+@slack_app.action("go_to_dashboard")
+def handle_some_action(ack, body, logger):
+    ack()
+    logger.debug(body)
+
+@slack_app.action("email_support")
+def handle_some_action(ack, body, logger):
+    ack()
+    logger.debug(body)
+
+@slack_app.action("upgrade_plan")
+def handle_some_action(ack, body, logger):
+    ack()
+    logger.debug(body)
 
 @slack_app.event("message")
 def handle_message_events(body, logger):
