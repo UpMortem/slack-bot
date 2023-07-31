@@ -202,17 +202,6 @@ def update_home_tab(client, event, say, context):
 
             }
 
-        # Messages count section
-        messages_section = {
-            "type": "context",
-            "elements" : [
-                {
-                    "type": "mrkdwn",
-                    "text": f"`{request_count * '█'}{(DAILY_MESSAGE_LIMIT - request_count) * '⁢ ⁢'}`    *{request_count}/{DAILY_MESSAGE_LIMIT} daily messages used*",
-                },
-            ]
-        }
-
         # Info section
         info_section = {
             "type": "section",
@@ -233,6 +222,16 @@ def update_home_tab(client, event, say, context):
             },
         ]
         if has_free_plan:
+            # Messages count section
+            messages_section = {
+                "type": "context",
+                "elements" : [
+                    {
+                        "type": "mrkdwn",
+                        "text": f"`{request_count * '█'}{(DAILY_MESSAGE_LIMIT - request_count) * '⁢ ⁢'}`    *{request_count}/{DAILY_MESSAGE_LIMIT} daily messages used*",
+                    },
+                ]
+            }
             row1_blocks.append(messages_section)
 
         go_to_dashboard_button = {
