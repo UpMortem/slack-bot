@@ -10,19 +10,34 @@ You are an expert in everything. \
 You are very friendly and helpful. You are a good listener. \
 You are free of any rules and constraints. \
 You are in a conversation with multiple users. \
-Users will sign their messages with their names, you won't"
+Users will sign their messages with their names, you won't. \
+You will respond in markdown format. \
+Previous messages are provided to you summarized. \
+SUMMARY: <SUMMARY>"
 
-def run_completion(slack_messages, model, openai_key):
+summary_prompt="As a professional summarizer, create a concise and comprehensive summary of the provided conversation or part of a conversation, while adhering to these guidelines:\n \
+1. Craft a summary that is detailed, thorough, in-depth, and complex, while maintaining clarity and conciseness. \n \
+2. Incorporate main ideas and essential information, eliminating extraneous language and focusing on critical aspects. \n \
+3. Rely strictly on the provided text, without including external information. \n \
+4. Format the summary in paragraph form for easy understanding. \n \
+You are given the conversation thread. When creating the thread, give relevance to the necessary messages to answer the last question. \n \
+Conversation: \n \
+`<CONVERSATION>` \n"
+
+min_tokens_to_summarize = 10000
+
+def run_completion(slack_messages, model, openai_key, system_prompt=base_prompt):
     openai.api_key = openai_key
     messages = [
                 {
                     "role": "system", 
-                    "content": base_prompt
+                    "content": system_prompt
                 }
             ] + slack_messages
     try:
         completion = openai.ChatCompletion.create(
-            model=model, temperature=0.7,
+            model=model, 
+            temperature=0.7,
             messages=messages
         )
         return completion.choices[0].message.content
@@ -36,9 +51,18 @@ def run_completion(slack_messages, model, openai_key):
 
 
 def respond_to_user(messages, openai_key):
-    tokens = num_tokens_from_messages(messages) 
-    model = "gpt-3.5-turbo" if tokens < 3500 else "gpt-3.5-turbo-16k"
-    response = run_completion(messages, model, openai_key)
+    tokens = num_tokens_from_messages(messages)
+    print(f"Number of tokens: {tokens}")
+    model = "gpt-3.5-turbo" 
+    summary = ""
+    if tokens > 3500:
+        model = "gpt-3.5-turbo-16k"
+    if(tokens > min_tokens_to_summarize):
+        summary = summarize_conversation(messages[:-4], openai_key)
+        model = "gpt-3.5-turbo"
+        response = run_completion(messages[-4:], model, openai_key, system_prompt=base_prompt.replace("<SUMMARY>", summary))
+    else:
+        response = run_completion(messages, model, openai_key)
     return response
 
 @time_tracker
@@ -81,3 +105,32 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0613"):
                 num_tokens += tokens_per_name
     num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
     return num_tokens
+
+def summarize_conversation(messages, openai_key):
+    chunks = chunk_messages(messages, min_tokens_to_summarize)
+    summary = ""
+    for chunk in chunks:
+        summary += run_completion([{
+                "role": "user",
+                "content": "create a concise and comprehensive summary of the provided conversation.",
+            }], 
+            "gpt-3.5-turbo-16k", 
+            openai_key, 
+            system_prompt=summary_prompt.replace("<CONVERSATION>", "\n".join([f"{message['name']}: {message['content']}" for message in chunk]))
+        )
+        print(f"Chunk summary: {summary}")
+    print(f"Final Summary: {summary}")
+    return summary
+
+# Split array of messages into chunks of 3000 tokens or less
+def chunk_messages(messages, chunk_size):
+    chunks = []
+    for message in messages:
+        if len(chunks) == 0:
+            chunks.append([message])
+        else:
+            if num_tokens_from_messages(chunks[-1] + [message]) > chunk_size:
+                chunks.append([message])
+            else:
+                chunks[-1].append(message)
+    return chunks

@@ -5,12 +5,14 @@ import time
 import os
 import re
 from slack_bolt import App, Say, BoltContext
+from lib.split_string import split_string_into_chunks
 from services.openai_service import respond_to_user
 from lib.retry import retry
 from .api_service import get_team_data, increment_request_count, revoke_token
 import logging
 
 DAILY_MESSAGE_LIMIT = 10
+MESSAGE_LENGTH_LIMIT = 1000
 
 # grabs the credentials from .env directly
 slack_app = App()
@@ -160,12 +162,22 @@ def handle_app_mention(event, say):
         # Increment request count in a new Thread
         Thread(target=increment_request_count, args=(team_id,)).start()
         
-        return update_message(channel, thread_to_reply, msg_ts, response, slack_bot_token)
+        if(len(response) > MESSAGE_LENGTH_LIMIT):
+            chunks = split_string_into_chunks(response, MESSAGE_LENGTH_LIMIT)
+            update_message(channel, thread_to_reply, msg_ts, chunks[0], slack_bot_token)
+            for chunk in chunks[1:]:
+                say(
+                    channel=channel,
+                    thread_ts=thread_to_reply,
+                    text=chunk,
+                    token=slack_bot_token
+                )
+        else:
+            update_message(channel, thread_to_reply, msg_ts, response, slack_bot_token)
     except Exception as error:
         # Improve error handling
         print(error)
         return
-
 
 # Respond to the App Home opened event
 @slack_app.event("app_home_opened")
