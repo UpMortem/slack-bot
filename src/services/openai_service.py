@@ -52,7 +52,6 @@ def run_completion(slack_messages, model, openai_key, system_prompt=base_prompt)
 
 def respond_to_user(messages, openai_key):
     tokens = num_tokens_from_messages(messages)
-    print(f"Number of tokens: {tokens}")
     model = "gpt-3.5-turbo" 
     summary = ""
     if tokens > 3500:
@@ -67,12 +66,7 @@ def respond_to_user(messages, openai_key):
 
 @time_tracker
 def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0613"):
-    """Return the number of tokens used by a list of messages."""
-    try:
-        encoding = tiktoken.encoding_for_model(model)
-    except KeyError:
-        # print("Warning: model not found. Using cl100k_base encoding.")
-        encoding = tiktoken.get_encoding("cl100k_base")
+    encoding = get_encoding(model)
     if model in {
         "gpt-3.5-turbo-0613",
         "gpt-3.5-turbo-16k-0613",
@@ -105,6 +99,15 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0613"):
                 num_tokens += tokens_per_name
     num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
     return num_tokens
+
+@time_tracker
+def get_encoding(model):
+    try:
+        encoding = tiktoken.encoding_for_model(model)
+    except KeyError:
+        # print("Warning: model not found. Using cl100k_base encoding.")
+        encoding = tiktoken.get_encoding("cl100k_base")
+    return encoding
 
 def summarize_conversation(messages, openai_key):
     chunks = chunk_messages(messages, MIN_TOKENS_TO_SUMMARIZE)
