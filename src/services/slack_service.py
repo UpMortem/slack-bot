@@ -12,7 +12,7 @@ from .api_service import get_team_data, increment_request_count, revoke_token
 import logging
 
 DAILY_MESSAGE_LIMIT = 10
-MESSAGE_LENGTH_LIMIT = 1000
+MESSAGE_LENGTH_LIMIT = 20000
 
 # grabs the credentials from .env directly
 slack_app = App()

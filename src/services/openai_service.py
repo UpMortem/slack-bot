@@ -24,7 +24,7 @@ You are given the conversation thread. When creating the thread, give relevance 
 Conversation: \n \
 `<CONVERSATION>` \n"
 
-min_tokens_to_summarize = 10000
+MIN_TOKENS_TO_SUMMARIZE = 10000
 
 def run_completion(slack_messages, model, openai_key, system_prompt=base_prompt):
     openai.api_key = openai_key
@@ -57,7 +57,7 @@ def respond_to_user(messages, openai_key):
     summary = ""
     if tokens > 3500:
         model = "gpt-3.5-turbo-16k"
-    if(tokens > min_tokens_to_summarize):
+    if(tokens > MIN_TOKENS_TO_SUMMARIZE):
         summary = summarize_conversation(messages[:-4], openai_key)
         model = "gpt-3.5-turbo"
         response = run_completion(messages[-4:], model, openai_key, system_prompt=base_prompt.replace("<SUMMARY>", summary))
@@ -107,7 +107,7 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0613"):
     return num_tokens
 
 def summarize_conversation(messages, openai_key):
-    chunks = chunk_messages(messages, min_tokens_to_summarize)
+    chunks = chunk_messages(messages, MIN_TOKENS_TO_SUMMARIZE)
     summary = ""
     for chunk in chunks:
         summary += run_completion([{
