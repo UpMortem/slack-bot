@@ -1,4 +1,7 @@
-# slack-bot
+# Haly AI
+
+## Try for free
+https://haly.ai
 
 ## Setup for dev
 
