@@ -10,7 +10,7 @@ COPY ./src ./src
 
 # Cache the tiktoken encoding file
 RUN python -c "import tiktoken; tiktoken.encoding_for_model('gpt-3.5-turbo-0613')"
-RUN python -c "import tiktoken; tiktoken.encoding_for_model('cl100k_base')"
+RUN python -c "import tiktoken; tiktoken.get_encoding('cl100k_base')"
 
 CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 index:flask_app --chdir /app/src
 
