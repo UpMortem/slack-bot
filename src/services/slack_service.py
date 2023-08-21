@@ -291,7 +291,6 @@ def update_home_tab(client, event, say, context):
     except Exception as e:
         print("Error publishing home tab view:", e)
 
-
 @slack_app.action("go_to_dashboard")
 def handle_some_action(ack, body, logger):
     ack()
