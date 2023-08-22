@@ -13,6 +13,10 @@ import logging
 
 DAILY_MESSAGE_LIMIT = 10
 MESSAGE_LENGTH_LIMIT = 20000
+WELCOME_MESSAGE=":wave: Hi there! I'm Haly, your friendly Slack chatbot! I'm here to assist you with any questions or problems you may have. With my expertise in a wide range of topics, feel free to ask me anything! \
+I'm not just a good listener, but also ready to help you out. Just type in your question or request, and I'll do my best to provide you with the information you need. \
+You can reach out to me by direct messaging me or by adding me to a public channel. Just tag me using @Haly to start a conversation. Let's get chatting!"
+
 
 # grabs the credentials from .env directly
 slack_app = App()
@@ -185,10 +189,14 @@ def update_home_tab(client, event, say, context):
     try:
         team_id = context.get("team_id")
         team_data = get_team_data(team_id)
+        if(event["tab"] == "home" and event["view"] is None):
+            say(
+                text=WELCOME_MESSAGE,
+                token=team_data["slack_bot_token"]
+            )
         current_user = event["user"]
         owner_user = team_data["owner_slack_id"]
 
-        # print(json.dumps(event, indent=4))
         # Get the user's plan information (Replace this with your logic to fetch the user's plan)
         request_count = team_data["request_count"]
         product_name = team_data["product_name"]
