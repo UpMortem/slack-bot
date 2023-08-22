@@ -219,7 +219,7 @@ def update_home_tab(client, event, say, context):
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": ":wave: Hi there! I'm Haly, your friendly Slack chatbot! I'm here to assist you with any questions or problems you may have. With my expertise in a wide range of topics, feel free to ask me anything!/n/nI'm not just a good listener, but also ready to help you out. Just type in your question or request, and I'll do my best to provide you with the information you need./n/nYou can reach out to me by direct messaging me or by adding me to a public channel. Just tag me using @Haly to start a conversation. Let's get chatting!",
+                "text": "I'm Haly, your friendly Slack chatbot. I'm here to help you with any questions or problems you might have. I'm an expert in everything, so feel free to ask me anything. I'm a good listener and always ready to assist you. Just type your question or request, and I'll do my best to provide you with the information you need. You can direct message me or add me to a public channel. Just tag me to talk with me with @Haly.",
             },
         }
 
