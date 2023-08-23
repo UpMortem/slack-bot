@@ -201,13 +201,19 @@ def update_home_tab(client, event, say, context):
         request_count = team_data["request_count"]
         product_name = team_data["product_name"]
         has_free_plan = product_name == "Free plan"
-
+        \'''python
+        #Define emojis for different plan ranks
+        rank_emojis ={
+         "Free Plan": ":ぬ:",
+         "Pro Plan": "✓",
+        "Enterprise plan": ":star:",
+        }
         # Row 1: Current Plan and Upgrade Button
         current_plan_section = {
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": f"*{product_name}* ",
+                "text": f"{rank_emojis[product_name]}{product_name}* ",
             },
         }
         if has_free_plan and current_user == owner_user:
