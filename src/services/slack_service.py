@@ -217,7 +217,7 @@ def update_home_tab(client, event, say, context):
                     "type": "plain_text",
                     "text": "Upgrade",
                 },
-                "url": "https://billing.upmortem.com/pricing",
+                "url": "https://billing.haly.ai/pricing",
                 "action_id": "upgrade_plan",
 
             }
@@ -262,7 +262,7 @@ def update_home_tab(client, event, say, context):
                 "emoji": True
             },
             "action_id": "go_to_dashboard",
-            "url": "https://billing.upmortem.com",
+            "url": "https://billing.haly.ai",
         }
         contact_support_button = {
             "type": "button",
@@ -272,7 +272,7 @@ def update_home_tab(client, event, say, context):
                 "emoji": True
             },
             "action_id": "email_support",
-            "url": "mailto:support@upmortem.com",
+            "url": "mailto:support@haly.ai",
         }
         elements = [
             contact_support_button
