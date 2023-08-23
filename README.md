@@ -14,6 +14,13 @@ https://haly.ai
 
 If you use the --debug flag when running flask, the application will rebuild whenever the source code changes.
 
+## Ngrok setup
+You will need ngrok to test the Bot locally
+- Go to https://ngrok.com/download and follow the instructions to install ngrok
+- Open a terminal an run `ngrok http localhost:8080`
+- Copy the forwarding url and go to you app setting in api.slack.com . Go to 'Event subscriptions'. Put your forwarding url + /slack/events in the Request URL input.
+  - e.g: if your forwarindg url is https://3121-161-29-169-94.ngrok-free.app you put https://3121-161-29-169-94.ngrok-free.app/slack/events
+
 ## release
 
  - Setup a new release tag in github for the revision you want to release
