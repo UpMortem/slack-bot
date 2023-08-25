@@ -5,13 +5,13 @@ https://haly.ai
 
 ## Setup for dev
 - Go to your command prompt
-- activate your virtual environment 
+- Activate your virtual environment 
 - Set variables in .env file
 - Variables in the .env file should include your slack bot token and signing secret. You will also need to define your open ai key along with your server indicating where your index .py file is located. Lastly, you need to make sure your API secret and base are defined. 
 - Have venv installed `python3 -m pip install virtualenv` and create a venv at the root of your project using `python3 -m virtualenv -p python3 myvenv`
 - To enable the virtual environment run `source myvenv/bin/activate` on Linux/MacOS and `myvenv\Scripts\activate` on Windows - this opens up a terminal into the virtual environment.
 - verify your python is isolated by typing `where python` in the above terminal
-- before running your bot make sure that your index.py file is in the correct directory,otherwise you will receive an error stating "could not import flask" 
+- Before running your bot make sure that your index.py file is in the correct directory,otherwise you will receive an error stating "could not import flask" 
 - Run `pip install -r "requirements.txt"` to install dependencies in the same terminal
 - Run `flask --debug run` to start the dev server in the same terminal
 
