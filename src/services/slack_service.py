@@ -1,10 +1,8 @@
-import json
 from threading import Thread
-from typing import Callable
 import time
 import os
 import re
-from slack_bolt import App, Say, BoltContext
+from slack_bolt import App
 from lib.split_string import split_string_into_chunks
 from services.openai_service import respond_to_user
 from lib.retry import retry
@@ -13,10 +11,10 @@ import logging
 
 DAILY_MESSAGE_LIMIT = 10
 MESSAGE_LENGTH_LIMIT = 20000
-WELCOME_MESSAGE=":wave: Hi there! I'm Haly, your friendly Slack chatbot! I'm here to assist you with any questions or problems you may have. With my expertise in a wide range of topics, feel free to ask me anything!\n\
+HOME_TAB_MESSAGE=":wave: Hi there! I'm Haly, your friendly Slack chatbot! I'm here to assist you with any questions or problems you may have. With my expertise in a wide range of topics, feel free to ask me anything!\n\
 I'm not just a good listener, but also ready to help you out. Just type in your question or request, and I'll do my best to provide you with the information you need.\n\
 You can reach out to me by direct messaging me or by adding me to a public channel. Just tag me using @Haly to start a conversation. Let's get chatting!"
-
+WELCOME_MESSAGE = "Hello everyone! I'm Haly, your friendly chatbot. I'm here to help you with anything you need. Just mention my name (@Haly) and ask your question, and I'll do my best to assist you. Looking forward to chatting with you all! 😊"
 
 # grabs the credentials from .env directly
 slack_app = App()
@@ -192,7 +190,7 @@ def update_home_tab(client, event, say, context):
         team_data = get_team_data(team_id)
         if(event["tab"] == "home" and event["view"] is None):
             say(
-                text=WELCOME_MESSAGE,
+                text=HOME_TAB_MESSAGE,
                 token=team_data["slack_bot_token"]
             )
         current_user = event["user"]
@@ -326,3 +324,29 @@ def handle_message_events(body, logger):
 @slack_app.event("app_uninstalled")
 def handle_app_uninstalled_events(body, logger):
     logger.debug(body)
+
+
+def handle_app_installed(request):
+    team_id = request.form.get("team_id")
+    team_data = get_team_data(team_id)
+    if team_data["slack_bot_token"] is None:
+        logging.info(f"App installed but no token found for team {team_id}")
+    conversation_list = retry(
+        lambda: slack_app.client.conversations_list(
+            token=team_data["slack_bot_token"],
+            types="public_channel",
+            exclude_archived=True,
+            limit=10
+        )
+    )
+    # send message to general channel
+    for conversation in conversation_list["channels"]:
+        if conversation["is_general"]:
+            retry(
+                lambda: slack_app.client.chat_postMessage(
+                    token=team_data["slack_bot_token"],
+                    channel=conversation["id"],
+                    text=WELCOME_MESSAGE
+                )
+            )
+    return "OK"
