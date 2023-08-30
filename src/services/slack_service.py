@@ -130,6 +130,7 @@ def handle_app_mention(event, say):
                 text=f"It appears you've exceeded the usage limit. To continue enjoying our services without interruption, kindly get in touch with your organization's administrator on {team_data['owner_email']} and request for a subscription upgrade.",
                 token=slack_bot_token
             )
+            logging.info(f"Organization {team_id} has exceeded the usage limit")
             return
 
         # Send 'thinking' message while we process the request
@@ -159,7 +160,7 @@ def handle_app_mention(event, say):
             )
 
         start_time = time.perf_counter()
-        response = respond_to_user(messages, openAi_key)
+        response = respond_to_user(messages, openAi_key, team_id)
         end_time = time.perf_counter()
         print(f"response generated in {round(end_time - start_time, 2)}s")
 
