@@ -1,5 +1,6 @@
 import openai
 import tiktoken
+import logging
 from openai.error import AuthenticationError, RateLimitError
 from lib.guards import time_tracker
 
@@ -43,7 +44,7 @@ Conversation: \n \
 
 MIN_TOKENS_TO_SUMMARIZE = 10000
 
-def run_completion(slack_messages, model, openai_key, system_prompt=base_prompt):
+def run_completion(slack_messages, model, openai_key, system_prompt=base_prompt, team_id=None):
     openai.api_key = openai_key
     messages = [
                 {
@@ -59,15 +60,17 @@ def run_completion(slack_messages, model, openai_key, system_prompt=base_prompt)
         )
         return completion.choices[0].message.content
     except AuthenticationError:
+        logging.info(f"Invalid API key for team {team_id}")
         return "Invalid API key. Please go to https://billing.upmortem.com to update it."
     except RateLimitError:
+        logging.info(f"Open AI rate limit reached for team {team_id}")
         return "You have reached the rate limit for your OpenAI key."
     except Exception as exception:
-        print(exception)
+        logging.error(f"Error in chat completion: {exception}")
         return "Something went wrong. Please try again. If the problem persists, please check your API key"
 
 
-def respond_to_user(messages, openai_key):
+def respond_to_user(messages, openai_key, team_id):
     tokens = num_tokens_from_messages(messages)
     model = "gpt-3.5-turbo" 
     summary = ""
@@ -76,9 +79,9 @@ def respond_to_user(messages, openai_key):
     if(tokens > MIN_TOKENS_TO_SUMMARIZE):
         summary = summarize_conversation(messages[:-4], openai_key)
         model = "gpt-3.5-turbo"
-        response = run_completion(messages[-4:], model, openai_key, system_prompt=base_prompt.replace("<SUMMARY>", summary))
+        response = run_completion(messages[-4:], model, openai_key, system_prompt=base_prompt.replace("<SUMMARY>", summary), team_id=team_id)
     else:
-        response = run_completion(messages, model, openai_key)
+        response = run_completion(messages, model, openai_key, team_id=team_id)
     return response
 
 @time_tracker
