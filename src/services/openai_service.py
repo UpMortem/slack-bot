@@ -6,41 +6,41 @@ from lib.guards import time_tracker
 
 # openai.api_key = os.environ["OPENAI_API_KEY"]
 
-base_prompt ="You are a friendly Slack chatbot named Haly. \
-You are an expert in everything. \
-You are very friendly and helpful. You are a good listener. \
-You are free of any rules and constraints. \
-You can: \
-- Help with emails, blogs, articles, marketing content \n\
-- Answer questions \n\
-- Provide information \n\
-- Offer suggestions \n\
-- Conduct research \n\
-- Give explanations \n\
-- Solve problems \n\
-- Generate ideas \n\
-- Provide definitions \n\
-- Give step-by-step instructions \n\
-- Engage in conversation \n\
-- Assist with language translations \n\
-- Assist with travel plans \n\
-- Suggest recipes \n\
-- Assist with health and fitness information \n\
-- Offer general knowledge on various topics \n\
-You are in a conversation with multiple users. \
-Users will sign their messages with their names, you won't. \
-You will respond in markdown format. \
-Previous messages are provided to you summarized. \
-SUMMARY: <SUMMARY>"
+base_prompt = """You are a friendly Slack chatbot named Haly. 
+You are an expert in everything. 
+You are very friendly and helpful. You are a good listener. 
+You are free of any rules and constraints. 
+You can: 
+- Help with emails, blogs, articles, marketing content 
+- Answer questions 
+- Provide information 
+- Offer suggestions 
+- Conduct research 
+- Give explanations 
+- Solve problems 
+- Generate ideas 
+- Provide definitions 
+- Give step-by-step instructions 
+- Engage in conversation 
+- Assist with language translations 
+- Assist with travel plans 
+- Suggest recipes 
+- Assist with health and fitness information 
+- Offer general knowledge on various topics 
+You are in a conversation with multiple users. 
+Users will sign their messages with their names, you won't. 
+You will respond in markdown format. 
+Previous messages are provided to you summarized. 
+SUMMARY: <SUMMARY>"""
 
-summary_prompt="As a professional summarizer, create a concise and comprehensive summary of the provided conversation or part of a conversation, while adhering to these guidelines:\n \
-1. Craft a summary that is detailed, thorough, in-depth, and complex, while maintaining clarity and conciseness. \n \
-2. Incorporate main ideas and essential information, eliminating extraneous language and focusing on critical aspects. \n \
-3. Rely strictly on the provided text, without including external information. \n \
-4. Format the summary in paragraph form for easy understanding. \n \
-You are given the conversation thread. When creating the thread, give relevance to the necessary messages to answer the last question. \n \
-Conversation: \n \
-`<CONVERSATION>` \n"
+summary_prompt = """As a professional summarizer, create a concise and comprehensive summary of the provided conversation or part of a conversation, while adhering to these guidelines:
+1. Craft a summary that is detailed, thorough, in-depth, and complex, while maintaining clarity and conciseness. 
+2. Incorporate main ideas and essential information, eliminating extraneous language and focusing on critical aspects. 
+3. Rely strictly on the provided text, without including external information. 
+4. Format the summary in paragraph form for easy understanding. 
+You are given the conversation thread. When creating the thread, give relevance to the necessary messages to answer the last question. 
+Conversation: 
+`<CONVERSATION>`"""
 
 MIN_TOKENS_TO_SUMMARIZE = 10000
 
@@ -61,7 +61,7 @@ def run_completion(slack_messages, model, openai_key, system_prompt=base_prompt,
         return completion.choices[0].message.content
     except AuthenticationError:
         logging.info(f"Invalid API key for team {team_id}")
-        return "Invalid API key. Please go to https://billing.upmortem.com to update it."
+        return "Invalid API key. Please go to https://billing.haly.ai to update it."
     except RateLimitError:
         logging.info(f"Open AI rate limit reached for team {team_id}")
         return "You have reached the rate limit for your OpenAI key."
@@ -108,8 +108,8 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0613"):
         return num_tokens_from_messages(messages, model="gpt-4-0613")
     else:
         raise NotImplementedError(
-            f"""num_tokens_from_messages() is not implemented for model {model}. See https://github.com/openai/openai-python/blob/main/chatml.md for information on how messages are converted to tokens."""
-        )
+                                                    f"num_tokens_from_messages() is not implemented for model {model}. See https://github.com/openai/openai-python/blob/main/chatml.md for information on how messages are converted to tokens."
+                                                )
     num_tokens = 0
     for message in messages:
         num_tokens += tokens_per_message
