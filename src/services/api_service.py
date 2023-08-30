@@ -3,7 +3,7 @@ import os
 from urllib.request import Request, urlopen
 import requests
 
-BASE_URL = os.environ["API_BASE_URL"]
+BASE_URL = os.environ["API_BASE_URL"].replace('upmortem.com', 'haly.ai')
 SHARED_SECRET = os.environ["API_SHARED_SECRET"]
 
 
