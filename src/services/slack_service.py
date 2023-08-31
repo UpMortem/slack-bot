@@ -343,6 +343,12 @@ def handle_app_installed(request):
     for conversation in conversation_list["channels"]:
         if conversation["is_general"]:
             retry(
+                lambda: slack_app.client.conversations_join(
+                    token=team_data["slack_bot_token"],
+                    channel=conversation["id"]
+                )
+            )
+            retry(
                 lambda: slack_app.client.chat_postMessage(
                     token=team_data["slack_bot_token"],
                     channel=conversation["id"],
