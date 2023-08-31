@@ -83,11 +83,9 @@ https://haly.ai
 
 Copy this or remember where to find it.
 
-6. Add these as latest versions of secrets in haly-pwc deployment and redeploy
+6. Next, select `OAuth & Permissions` tab in api.slack.com and verify url in the top banner
 
-7. Next, select `OAuth & Permissions` tab in api.slack.com and verify url in the top banner
-
-8. you should be able to talk to haly in our clients slack org
+7. you should be able to talk to haly in our clients slack org
 
 ### Configure your project
 - Set variables in .env file
