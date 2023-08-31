@@ -61,7 +61,7 @@ def run_completion(slack_messages, model, openai_key, system_prompt=base_prompt,
         return completion.choices[0].message.content
     except AuthenticationError:
         logging.info(f"Invalid API key for team {team_id}")
-        return "Invalid API key. Please go to https://billing.upmortem.com to update it."
+        return "Invalid API key. Please have your Slack admin go to https://billing.haly.ai and edit it under the Your Organization section."
     except RateLimitError:
         logging.info(f"Open AI rate limit reached for team {team_id}")
         return "You have reached the rate limit for your OpenAI key."
