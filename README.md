@@ -40,31 +40,22 @@ https://haly.ai
             "bot": [
                 "app_mentions:read",
                 "channels:history",
+                "channels:join",
+                "channels:read",
                 "chat:write",
                 "groups:history",
+                "groups:write",
                 "im:history",
                 "im:read",
                 "im:write",
                 "mpim:history",
                 "mpim:read",
                 "mpim:write",
-                "users:read",
-                "groups:write",
-                "channels:read",
-                "groups:read"
+                "users:read"
             ]
         }
     },
     "settings": {
-        "event_subscriptions": {
-            "request_url": "<YOUR_NGROK_URL>/slack/events",
-            "bot_events": [
-                "app_home_opened",
-                "app_mention",
-                "message.im",
-                "tokens_revoked"
-            ]
-        },
         "org_deploy_enabled": false,
         "socket_mode_enabled": false,
         "token_rotation_enabled": false
@@ -83,8 +74,6 @@ https://haly.ai
 
 Copy this or remember where to find it.
 
-6. you should be able to talk to haly in our clients slack org
-
 ### Configure your project
 - Set variables in .env file
 - Have venv installed `python3 -m pip install virtualenv` and create a venv at the root of your project using `python3 -m virtualenv -p python3 myvenv`
@@ -101,6 +90,9 @@ You will need ngrok to test the Bot locally
 - Open a terminal an run `ngrok http localhost:8080`
 - Copy the forwarding url and go to you app setting in api.slack.com . Go to 'Event subscriptions'. Put your forwarding url + /slack/events in the Request URL input.
   - e.g: if your forwarindg url is https://3121-161-29-169-94.ngrok-free.app you put https://3121-161-29-169-94.ngrok-free.app/slack/events
+- Subscribe to the neccesary bot events
+![image](https://github.com/UpMortem/slack-bot/assets/5354324/f46f93f3-8713-432f-812f-1ba6218fc07f)
+
 
 ## release
 
