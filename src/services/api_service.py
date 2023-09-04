@@ -1,13 +1,17 @@
 import json
+import logging
 import os
 from urllib.request import Request, urlopen
 import requests
+from stubs.api_stubs import team_data_stub
 
 BASE_URL = os.environ["API_BASE_URL"]
 SHARED_SECRET = os.environ["API_SHARED_SECRET"]
-
+STANDALONE = os.environ["STANDALONE"] == "true"
 
 def get_team_data(team_id):
+    if STANDALONE:
+        return team_data_stub
     url = f"{BASE_URL}/api/organization/get_team_data/{team_id}"
     headers = {"X-Shared-Secret": SHARED_SECRET}
     response = requests.get(url=url, headers=headers, timeout=30)
@@ -26,6 +30,8 @@ def get_team_data(team_id):
 
 
 def revoke_token(team_id):
+    if STANDALONE:
+        return
     url = f"{BASE_URL}/api/slack/revoke_token"
     headers = {"X-Shared-Secret": os.environ["API_SHARED_SECRET"]}
     # make post request with team id and token as data
@@ -44,6 +50,8 @@ def revoke_token(team_id):
     return
 
 def increment_request_count(team_id):
+    if STANDALONE:
+        return
     url = f"{BASE_URL}/api/slack/increment_request_count"
     headers = {
         "X-Shared-Secret": SHARED_SECRET,
