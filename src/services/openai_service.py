@@ -71,7 +71,7 @@ def run_completion(slack_messages, model, openai_key, system_prompt=base_prompt,
 
 
 def respond_to_user(messages, openai_key, team_id):
-    tokens = num_tokens_from_messages(messages)
+    tokens = rough_num_tokens_from_messages(messages)
     model = "gpt-3.5-turbo" 
     summary = ""
     if tokens > 3500:
@@ -83,6 +83,19 @@ def respond_to_user(messages, openai_key, team_id):
     else:
         response = run_completion(messages, model, openai_key, team_id=team_id)
     return response
+
+def rough_num_tokens_from_messages(messages):
+    tokens_per_message = 3
+    tokens_per_name = 1
+    num_tokens = 0
+    for message in messages:
+        num_tokens += tokens_per_message
+        for key, value in message.items():
+            num_tokens += len(value) / 3 # rough estimate of number of tokens
+            if key == "name":
+                num_tokens += tokens_per_name
+    num_tokens += 3
+    return num_tokens
 
 @time_tracker
 def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0613"):
