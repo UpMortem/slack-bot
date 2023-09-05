@@ -206,7 +206,7 @@ def update_home_tab(client, event, say, context):
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": f"*{product_name}* ",
+                "text": f"✅ *{product_name}* ",
             },
         }
         if has_free_plan and current_user == owner_user:
@@ -226,7 +226,7 @@ def update_home_tab(client, event, say, context):
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": "I'm Haly, your friendly Slack chatbot. I'm here to help you with any questions or problems you might have. I'm an expert in everything, so feel free to ask me anything. I'm a good listener and always ready to assist you. Just type your question or request, and I'll do my best to provide you with the information you need. You can direct message me or add me to a public channel. Just tag me to talk with me with @Haly.",
+                "text": "👋 I'm Haly, your friendly Slack chatbot. I'm here to help you with any questions or problems you might have. I'm an expert in everything, so feel free to ask me anything. I'm a good listener and always ready to assist you. Just type your question or request, and I'll do my best to provide you with the information you need. You can direct message me or add me to a public channel. Just tag me to talk with me with @Haly.",
             },
         }
 
