@@ -75,7 +75,26 @@ https://haly.ai
 Copy this or remember where to find it.
 
 ### Configure your project
-- Set variables in .env file
+- Create a new .env file
+- If you only want to use Haly for your own workspace, you can use it in standalone mode. This are the env varaibles needed for standalone mode
+```
+# SLACK BOT
+SLACK_BOT_TOKEN=your-slack-bot-token
+SLACK_SIGNING_SECRET=your-slack-signing-secret
+# OPENAI
+OPENAI_API_KEY=your-openai-api-key
+# SERVER
+FLASK_APP=src/index.py
+FLASK_RUN_HOST=localhost
+FLASK_RUN_PORT=8080
+# API
+API_SHARED_SECRET=not-needed-for-standalone
+API_BASE_URL=not-needed-for-standalone
+
+LOG_LEVEL=DEBUG
+STANDALONE=true
+SLACK_USER_ID=U01JZQZQZQZ # Put a your workspace admin user ID if you know it
+```
 - Have venv installed `python3 -m pip install virtualenv` and create a venv at the root of your project using `python3 -m virtualenv -p python3 myvenv`
 - To enable the virtual environment run `source myvenv/bin/activate` on Linux/MacOS and `myvenv\Scripts\activate` on Windows - this opens up a terminal into the virtual environment.
 - verify your python is isolated by typing `where python` in the above terminal
