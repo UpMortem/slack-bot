@@ -33,8 +33,7 @@ https://haly.ai
     },
     "oauth_config": {
         "redirect_urls": [
-            "https://localhost:5173/slack-auth",
-            "<YOUR_AUTH0_URL>/login/callback"
+            "https://localhost:5173/slack-auth"
         ],
         "scopes": {
             "bot": [
