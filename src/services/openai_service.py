@@ -1,5 +1,4 @@
 import openai
-import tiktoken
 import logging
 from openai.error import AuthenticationError, RateLimitError
 from lib.guards import time_tracker
