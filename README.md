@@ -1,5 +1,4 @@
 # Haly AI - Your Friendly Chatbot Companion
-
 ![Haly](images/github_readme.png)
 ## Welcome to Haly!
 **Haly** is here to revolutionize the way you communicate and seek information. With its friendly and helpful nature, Haly is more than just a chatbot - it's your ultimate companion in the digital world.
@@ -38,6 +37,8 @@ https://haly.ai
 ### Create your Slack bot:
 1. Go to https://api.slack.com/apps and hit the "Create New App" green button. Select "From an app manifest" option.
 <img width="425" alt="image" src="https://user-images.githubusercontent.com/15027870/218860230-a8c4c679-fe75-45cc-a6bc-25229dd1610b.png">
+
+***
 
 2. Choose workspace from dropdown if needed and paste the following content in the manifest. Hit Next button. Review the OAuth and Features tabs then hit Create.
 <img width="425" alt="image" src="https://user-images.githubusercontent.com/15027870/218860631-6ffd3a66-463e-4c90-85f9-701ba69d3bb5.png">
@@ -92,13 +93,19 @@ https://haly.ai
 }
 ```
 
+***
+
 3. Select `Basic information` tab from the left nav bar, scroll down and make sure to save the "Signing Secret" for later. 
 <img width="711" alt="image" src="https://user-images.githubusercontent.com/15027870/218861139-fa549cce-73e0-457c-ba00-a3cdb96372c5.png">
 
 Scroll down further and use [Haly Profile Image](https://github.com/UpMortem/slack-bot/assets/469387/490a891e-379e-4e5c-9f31-4699dce78e01) for her App icon or select your own if you wish.
 
+***
+
 4. Next, select `OAuth & Permissions` tab from the left nav bar, under `OAuth Tokens for Your Workspace` section, hit `Install to Workspace` and follow the instructions there.
 <img width="652" alt="image" src="https://user-images.githubusercontent.com/15027870/218863134-e9d7badc-0442-4c09-9417-d6e8e0267c6b.png">
+
+***
 
 5. After installing, you will find a Bot user OAuth token. Save this for later use.
 ![image](https://github.com/UpMortem/slack-bot/assets/5354324/7d866eee-a7e6-4059-b422-bae8ac9016a3)
@@ -146,6 +153,6 @@ You will need ngrok to test the Bot locally
 ![image](https://github.com/UpMortem/slack-bot/assets/5354324/f46f93f3-8713-432f-812f-1ba6218fc07f)
 
 
-## release
+## Releases
 
  - Cloud build trigger will run every time you push a git tag that matches `^v.*$`
