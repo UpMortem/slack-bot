@@ -12,7 +12,7 @@ Haly is an expert in everything - from providing answers and explanations, to ge
 - **Problem Solving and Troubleshooting**: Stuck with a difficult problem? Haly loves challenges and is always ready to help you find the best solution.
 - **Recipes and Health & Fitness**: Looking for a delicious recipe or need some advice on staying fit? Haly has got you covered with a wide range of suggestions and information.
 - **Travel Planning**: Need help with your travel plans? Haly can assist you in finding the best destinations, booking accommodations, and even suggesting local attractions.
-- 
+
 ## Why Choose Haly?
 Haly is not just another chatbot - it's a personal assistant that truly cares about your needs. Here's why you should give Haly a try:
 - **Friendly and Engaging**: Haly's warm and approachable personality makes every conversation enjoyable. You'll feel like you're chatting with a good friend.
