@@ -1,6 +1,6 @@
 # Haly AI - Your Friendly Chatbot Companion
 
-![Haly]([https://example.com/haly.png](https://files.slack.com/files-pri/T03QUQ2NFQC-F05QZTHF17F/github_readme.png))
+![Haly](https://files.slack.com/files-pri/T03QUQ2NFQC-F05QZTHF17F/github_readme.png)
 ## Welcome to Haly!
 **Haly** is here to revolutionize the way you communicate and seek information. With its friendly and helpful nature, Haly is more than just a chatbot - it's your ultimate companion in the digital world.
 
