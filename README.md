@@ -1,4 +1,28 @@
-# Haly AI
+# Haly AI - Your Friendly Chatbot Companion
+
+![Haly]([https://example.com/haly.png](https://files.slack.com/files-pri/T03QUQ2NFQC-F05QZTHF17F/github_readme.png))
+## Welcome to Haly!
+**Haly** is here to revolutionize the way you communicate and seek information. With its friendly and helpful nature, Haly is more than just a chatbot - it's your ultimate companion in the digital world.
+
+## What Can Haly Do?
+Haly is an expert in everything - from providing answers and explanations, to generating ideas and assisting with various tasks. Here are just a few things Haly can help you with:
+- **Semantic Search (SmartSearch)**: Ask questions about your organization and Haly will tell you an answer based on previous public channel messages and who are the subject matter experts.
+- **Emails, Blogs, and Marketing Content**: Need assistance with writing? Haly is at your service, providing suggestions, editing, and even helping with translations.
+- **Information and Research**: Curious about a specific topic? Haly can provide you with accurate information and conduct in-depth research to satisfy your curiosity.
+- **Problem Solving and Troubleshooting**: Stuck with a difficult problem? Haly loves challenges and is always ready to help you find the best solution.
+- **Recipes and Health & Fitness**: Looking for a delicious recipe or need some advice on staying fit? Haly has got you covered with a wide range of suggestions and information.
+- **Travel Planning**: Need help with your travel plans? Haly can assist you in finding the best destinations, booking accommodations, and even suggesting local attractions.
+- 
+## Why Choose Haly?
+Haly is not just another chatbot - it's a personal assistant that truly cares about your needs. Here's why you should give Haly a try:
+- **Friendly and Engaging**: Haly's warm and approachable personality makes every conversation enjoyable. You'll feel like you're chatting with a good friend.
+- **Expert in Everything**: Whether you need help with writing, research, problem-solving, or anything else, Haly has the knowledge and expertise to assist you.
+- **Always Available**: Haly is there for you 24/7, ready to provide assistance whenever you need it. Say goodbye to waiting for human help.
+- **Efficient and Reliable**: Haly is fast, accurate, and reliable. You can trust Haly to deliver high-quality results every time.
+- 
+## Get Started with Haly Today!
+Ready to experience the power of Haly? Join the growing community of Haly users and see how this friendly chatbot can enhance your digital life. Simply visit our website https://haly.ai or integrate Haly into Slack following the instructions in this README, and let the conversation begin!
+Note: Haly is constantly learning and improving, so don't hesitate to provide feedback and suggestions. Together, we can make Haly even better!
 
 ## Try for free
 https://haly.ai
