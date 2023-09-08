@@ -95,7 +95,7 @@ https://haly.ai
 3. Select `Basic information` tab from the left nav bar, scroll down and make sure to save the "Signing Secret" for later. 
 <img width="711" alt="image" src="https://user-images.githubusercontent.com/15027870/218861139-fa549cce-73e0-457c-ba00-a3cdb96372c5.png">
 
-Scroll down further and use ![Haly Profile Image](https://github.com/UpMortem/slack-bot/assets/469387/490a891e-379e-4e5c-9f31-4699dce78e01) for her App icon or select your own if you wish.
+Scroll down further and use [Haly Profile Image](https://github.com/UpMortem/slack-bot/assets/469387/490a891e-379e-4e5c-9f31-4699dce78e01) for her App icon or select your own if you wish.
 
 4. Next, select `OAuth & Permissions` tab from the left nav bar, under `OAuth Tokens for Your Workspace` section, hit `Install to Workspace` and follow the instructions there.
 <img width="652" alt="image" src="https://user-images.githubusercontent.com/15027870/218863134-e9d7badc-0442-4c09-9417-d6e8e0267c6b.png">
