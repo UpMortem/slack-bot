@@ -119,7 +119,7 @@ def chunk_messages(messages, chunk_size):
         if len(chunks) == 0:
             chunks.append([message])
         else:
-            if num_tokens_from_messages(chunks[-1] + [message]) > chunk_size:
+            if rough_num_tokens_from_messages(chunks[-1] + [message]) > chunk_size:
                 chunks.append([message])
             else:
                 chunks[-1].append(message)
