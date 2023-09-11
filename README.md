@@ -147,7 +147,7 @@ If you use the --debug flag when running flask, the application will rebuild whe
 You will need ngrok to test the Bot locally
 - Go to https://ngrok.com/download and follow the instructions to install ngrok
 - Open a terminal an run `ngrok http localhost:8080`
-- Copy the forwarding url and go to you app setting in api.slack.com . Go to 'Event subscriptions'. Put your forwarding url + /slack/events in the Request URL input.
+- Copy the forwarding url that starts with *https* and go to you app setting in api.slack.com . Go to 'Event subscriptions'. Put your forwarding url + /slack/events in the Request URL input.
   - e.g: if your forwarindg url is https://3121-161-29-169-94.ngrok-free.app you put https://3121-161-29-169-94.ngrok-free.app/slack/events
 - Subscribe to the neccesary bot events
 ![image](https://github.com/UpMortem/slack-bot/assets/5354324/f46f93f3-8713-432f-812f-1ba6218fc07f)
