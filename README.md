@@ -32,7 +32,7 @@ https://haly.ai
 
 1. You must have a Slack organization where either you or an administrator can approve a new application.
 2. The ability to git clone a repo and run commands in either a Windows, Mac, or Linux terminal.
-3. Install python and pip
+3. Install [python](https://www.python.org/downloads/) and [pip](https://pip.pypa.io/en/stable/installation/).
 
 ### Create your Slack bot:
 1. Go to https://api.slack.com/apps and hit the "Create New App" green button. Select "From an app manifest" option.
