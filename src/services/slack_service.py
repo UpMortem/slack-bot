@@ -162,9 +162,6 @@ def handle_app_mention(event, say):
         end_time = time.perf_counter()
         print(f"response generated in {round(end_time - start_time, 2)}s")
 
-        # Increment request count in a new Thread
-        Thread(target=increment_request_count, args=(team_id,)).start()
-        
         if(len(response) > MESSAGE_LENGTH_LIMIT):
             chunks = split_string_into_chunks(response, MESSAGE_LENGTH_LIMIT)
             update_message(channel, thread_to_reply, msg_ts, chunks[0], slack_bot_token)
@@ -177,6 +174,13 @@ def handle_app_mention(event, say):
                 )
         else:
             update_message(channel, thread_to_reply, msg_ts, response, slack_bot_token)
+
+        # Increment request count
+        try:
+            increment_request_count(team_id)
+        except Exception as error:
+            logging.error(error)
+            
     except Exception as error:
         # Improve error handling
         print(error)
