@@ -10,7 +10,7 @@ from .api_service import get_team_data, increment_request_count, revoke_token
 import logging
 
 DAILY_MESSAGE_LIMIT = 10
-MESSAGE_LENGTH_LIMIT = 20000
+MESSAGE_LENGTH_LIMIT = 4000
 HOME_TAB_MESSAGE=":wave: Hi there! I'm Haly, your friendly Slack chatbot! I'm here to assist you with any questions or problems you may have. With my expertise in a wide range of topics, feel free to ask me anything!\n\
 I'm not just a good listener, but also ready to help you out. Just type in your question or request, and I'll do my best to provide you with the information you need.\n\
 You can reach out to me by direct messaging me or by adding me to a public channel. Just tag me using @Haly to start a conversation. Let's get chatting!"
