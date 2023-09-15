@@ -22,7 +22,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     - name: Set PYTHONPATH
-      run: echo "PYTHONPATH=$(pwd)/src" >> $GITHUB_ENV
+      run: export PYTHONPATH=src
     - name: Test with unittest
       run: |
         python -m unittest discover -s src/tests
