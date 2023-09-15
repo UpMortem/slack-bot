@@ -28,19 +28,17 @@ def shared_secret_guard(function, test_mode=False):
             if secret != os.environ["API_SHARED_SECRET"]:
                 json_abort(HTTPStatus.UNAUTHORIZED, unauthorized_error)
                 return None
-        return function(*args, **kwargs)
-
-    return decorator
-
-
-def get_secret_from_request():
-    secret = request.headers.get("X-Shared-Secret", None)
-    if not secret:
-        json_abort(HTTPStatus.UNAUTHORIZED, unauthorized_error)
-        return None
-    return secret
-
-
+        def shared_secret_guard(function, test_mode=False):
+            @wraps(function)
+            def decorator(*args, **kwargs):
+                if not test_mode:
+                    secret = get_secret_from_request()
+                    if secret != os.environ["API_SHARED_SECRET"]:
+                        json_abort(HTTPStatus.UNAUTHORIZED, unauthorized_error)
+                        return None
+                return function(*args, **kwargs)
+        
+            return decorator
 def json_abort(status_code, data=None):
     response = jsonify(data)
     response.status_code = status_code
