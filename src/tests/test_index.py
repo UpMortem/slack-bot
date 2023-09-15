@@ -1,6 +1,6 @@
 import unittest
 
-from ..index import flask_app
+from src.index import flask_app
 
 
 class IndexTestCase(unittest.TestCase):
