@@ -1,6 +1,9 @@
+import sys
 import logging
 import os
 import unittest
+
+sys.path.append('src')
 
 from flask import Flask, request
 from slack_bolt.adapter.flask import SlackRequestHandler
