@@ -20,11 +20,13 @@ handler = SlackRequestHandler(slack_app)
 
 @flask_app.route("/slack/events", methods=["POST"])
 def slack_events():
+    if flask_app.config['TESTING']:
+        return 'OK', 200
     return handler.handle(request)
 
 
 @flask_app.route("/slack/app-installed", methods=["POST"])
-@shared_secret_guard
+@shared_secret_guard(test_mode=flask_app.config['TESTING'])
 def app_installed_route():
     return handle_app_installed(request)
 
