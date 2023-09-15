@@ -29,8 +29,6 @@ def slack_events():
 @shared_secret_guard(test_mode=flask_app.config['TESTING'])
 def app_installed_route():
     return handle_app_installed(request)
-
-
 @flask_app.cli.command()
 def test():
     """Run the unit tests."""
