@@ -1,5 +1,7 @@
 import unittest
+from unittest.mock import patch
 
+from lib.guards import shared_secret_guard
 from src.index import flask_app
 
 
@@ -11,9 +13,11 @@ class IndexTestCase(unittest.TestCase):
     def setUp(self):
         self.app = flask_app
         self.client = self.app.test_client()
+        self.patcher = patch.object(shared_secret_guard, return_value=True)
+        self.patcher.start()
 
     def tearDown(self):
-        pass
+        self.patcher.stop()
 
     def test_slack_events_route(self):
         response = self.client.post("/slack/events", headers=self.headers)
