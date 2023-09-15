@@ -9,3 +9,4 @@ __pycache__/
 .idea/
 
 gha-creds-*.json
+!src/tests/.env
