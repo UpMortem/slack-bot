@@ -2,7 +2,7 @@ import unittest
 
 from index import flask_app
 
-class IndexTestCase(unittest.TestCase):
+
 class IndexTestCase(unittest.TestCase):
     def setUp(self):
         self.app = flask_app
