@@ -20,25 +20,24 @@ def time_tracker(func):
     return wrapper
 
 
+def get_secret_from_request():
+    return request.headers.get("X-Api-Key")
+
+
 def shared_secret_guard(function, test_mode=False):
     @wraps(function)
     def decorator(*args, **kwargs):
-        if not test_mode:
-            secret = get_secret_from_request()
-            if secret != os.environ["API_SHARED_SECRET"]:
-                json_abort(HTTPStatus.UNAUTHORIZED, unauthorized_error)
-                return None
-        def shared_secret_guard(function, test_mode=False):
-            @wraps(function)
-            def decorator(*args, **kwargs):
-                if not test_mode:
-                    secret = get_secret_from_request()
-                    if secret != os.environ["API_SHARED_SECRET"]:
-                        json_abort(HTTPStatus.UNAUTHORIZED, unauthorized_error)
-                        return None
-                return function(*args, **kwargs)
-        
-            return decorator
+        if test_mode:
+            return function(*args, **kwargs)
+        secret = get_secret_from_request()
+        if secret != os.environ["API_SHARED_SECRET"]:
+            json_abort(HTTPStatus.UNAUTHORIZED, unauthorized_error)
+            return None
+        return function(*args, **kwargs)
+
+    return decorator
+
+
 def json_abort(status_code, data=None):
     response = jsonify(data)
     response.status_code = status_code
