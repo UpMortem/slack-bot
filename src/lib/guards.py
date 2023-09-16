@@ -8,6 +8,10 @@ from flask import abort, jsonify, request
 unauthorized_error = {"message": "Requires authentication"}
 
 
+def json_abort(status, message):
+    abort(status, jsonify(message))
+
+
 def time_tracker(func):
     def wrapper(*args, **kwargs):
         start_time = time.perf_counter()
@@ -33,12 +37,16 @@ def shared_secret_guard(function, test_mode=False):
         if secret != os.environ["API_SHARED_SECRET"]:
             json_abort(HTTPStatus.UNAUTHORIZED, unauthorized_error)
             return None
-        return function(*args, **kwargs)
 
-    return decorator
+        def shared_secret_guard(function, test_mode=False):
+            @wraps(function)
+            def decorator(*args, **kwargs):
+                if test_mode:
+                    return function(*args, **kwargs)
+                secret = get_secret_from_request()
+                if secret != os.environ["API_SHARED_SECRET"]:
+                    json_abort(HTTPStatus.UNAUTHORIZED, unauthorized_error)
+                    return None
+                return function(*args, **kwargs)
 
-
-def json_abort(status_code, data=None):
-    response = jsonify(data)
-    response.status_code = status_code
-    abort(response)
+            return decorator
