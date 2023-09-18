@@ -1,9 +1,9 @@
 name: build, test, and push container image.
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   build:
@@ -24,4 +24,5 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       - name: Test with pytest
         run: |
-          pytest
+          export FLASK_APP=src/index.py
+          pytest src/tests
