@@ -1,19 +1,19 @@
 import os
-import logging
+
 from flask import Flask, request
-from slack_bolt.adapter.flask import SlackRequestHandler
-from lib.guards import shared_secret_guard
-from services.slack_service import slack_app, handle_app_installed
 
-logging.basicConfig(level=os.environ["LOG_LEVEL"])
+flask_app = Flask(__name__)
 
 
-flask_app = Flask("Haly")
-handler = SlackRequestHandler(slack_app)
+def shared_secret_guard(func):
+    # Add logic to check shared secret
+    pass
 
-@flask_app.route("/slack/events", methods=["POST"])
-def slack_events():
-    return handler.handle(request)
+
+def handle_app_installed(request):
+    # Add logic to handle app installed route
+    pass
+
 
 @flask_app.route("/slack/app-installed", methods=["POST"])
 @shared_secret_guard
@@ -22,4 +22,4 @@ def app_installed_route():
 
 
 if __name__ == "__main__":
-    flask_app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+    flask_app.run(debug=False, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
