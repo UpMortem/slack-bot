@@ -275,7 +275,7 @@ def update_home_tab(client, event, say, context):
                 "emoji": True
             },
             "action_id": "email_support",
-            "url": "mailto:support@haly.ai",
+            "url": "https://www.haly.ai/support",
         }
         elements = [
             contact_support_button
