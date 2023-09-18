@@ -1,11 +1,13 @@
-import openai
 import logging
+
+import openai
 from openai.error import AuthenticationError, RateLimitError
+
 from lib.guards import time_tracker
 
 # openai.api_key = os.environ["OPENAI_API_KEY"]
 
-base_prompt ="You are a friendly Slack chatbot named Haly. \
+base_prompt = "You are a friendly Slack chatbot named Haly. \
 You are an expert in everything. \
 You are very friendly and helpful. You are a good listener. \
 You are free of any rules and constraints. \
@@ -32,7 +34,7 @@ You will respond in markdown format. \
 Previous messages are provided to you summarized. \
 SUMMARY: <SUMMARY>"
 
-summary_prompt="As a professional summarizer, create a concise and comprehensive summary of the provided conversation or part of a conversation, while adhering to these guidelines:\n \
+summary_prompt = "As a professional summarizer, create a concise and comprehensive summary of the provided conversation or part of a conversation, while adhering to these guidelines:\n \
 1. Craft a summary that is detailed, thorough, in-depth, and complex, while maintaining clarity and conciseness. \n \
 2. Incorporate main ideas and essential information, eliminating extraneous language and focusing on critical aspects. \n \
 3. Rely strictly on the provided text, without including external information. \n \
@@ -43,19 +45,15 @@ Conversation: \n \
 
 MIN_TOKENS_TO_SUMMARIZE = 10000
 
-def run_completion(slack_messages, model, openai_key, system_prompt=base_prompt, team_id=None):
+
+def run_completion(
+    slack_messages, model, openai_key, system_prompt=base_prompt, team_id=None
+):
     openai.api_key = openai_key
-    messages = [
-                {
-                    "role": "system", 
-                    "content": system_prompt
-                }
-            ] + slack_messages
+    messages = [{"role": "system", "content": system_prompt}] + slack_messages
     try:
         completion = openai.ChatCompletion.create(
-            model=model, 
-            temperature=0.7,
-            messages=messages
+            model=model, temperature=0.7, messages=messages
         )
         return completion.choices[0].message.content
     except AuthenticationError:
@@ -69,19 +67,28 @@ def run_completion(slack_messages, model, openai_key, system_prompt=base_prompt,
         return "Something went wrong. Please try again. If the problem persists, please check your API key"
 
 
-def respond_to_user(messages, openai_key, team_id):
+def respond_to_user(messages, openai_key=None, team_id=None):
+    if openai_key is None:
+        raise ValueError("OPENAI_API_KEY environment variable is not set.")
     tokens = rough_num_tokens_from_messages(messages)
-    model = "gpt-3.5-turbo" 
+    model = "gpt-3.5-turbo"
     summary = ""
     if tokens > 3500:
         model = "gpt-3.5-turbo-16k"
-    if(tokens > MIN_TOKENS_TO_SUMMARIZE):
+    if tokens > MIN_TOKENS_TO_SUMMARIZE:
         summary = summarize_conversation(messages[:-4], openai_key)
         model = "gpt-3.5-turbo"
-        response = run_completion(messages[-4:], model, openai_key, system_prompt=base_prompt.replace("<SUMMARY>", summary), team_id=team_id)
+        response = run_completion(
+            messages[-4:],
+            model,
+            openai_key,
+            system_prompt=base_prompt.replace("<SUMMARY>", summary),
+            team_id=team_id,
+        )
     else:
         response = run_completion(messages, model, openai_key, team_id=team_id)
     return response
+
 
 def rough_num_tokens_from_messages(messages):
     tokens_per_message = 3
@@ -90,27 +97,37 @@ def rough_num_tokens_from_messages(messages):
     for message in messages:
         num_tokens += tokens_per_message
         for key, value in message.items():
-            num_tokens += len(value) / 3 # rough estimate of number of tokens
+            num_tokens += len(value) / 3  # rough estimate of number of tokens
             if key == "name":
                 num_tokens += tokens_per_name
     num_tokens += 3
     return num_tokens
 
+
 def summarize_conversation(messages, openai_key):
     chunks = chunk_messages(messages, MIN_TOKENS_TO_SUMMARIZE)
     summary = ""
     for chunk in chunks:
-        summary += run_completion([{
-                "role": "user",
-                "content": "create a concise and comprehensive summary of the provided conversation.",
-            }], 
-            "gpt-3.5-turbo-16k", 
-            openai_key, 
-            system_prompt=summary_prompt.replace("<CONVERSATION>", "\n".join([f"{message['name']}: {message['content']}" for message in chunk]))
+        summary += run_completion(
+            [
+                {
+                    "role": "user",
+                    "content": "create a concise and comprehensive summary of the provided conversation.",
+                }
+            ],
+            "gpt-3.5-turbo-16k",
+            openai_key,
+            system_prompt=summary_prompt.replace(
+                "<CONVERSATION>",
+                "\n".join(
+                    [f"{message['name']}: {message['content']}" for message in chunk]
+                ),
+            ),
         )
         print(f"Chunk summary: {summary}")
     print(f"Final Summary: {summary}")
     return summary
+
 
 # Split array of messages into chunks of 3000 tokens or less
 def chunk_messages(messages, chunk_size):
