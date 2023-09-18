@@ -3,3 +3,5 @@ python-dotenv==0.21.1
 slack-bolt==1.16.1
 openai==0.27.6
 gunicorn==20.1.0
+pytest==7.0.1
+Flask-Testing==0.8.1
