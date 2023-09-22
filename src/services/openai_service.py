@@ -44,8 +44,10 @@ Conversation: \n \
 
 MIN_TOKENS_TO_SUMMARIZE = 10000
 
-def run_completion(slack_messages, model, openai_key, system_prompt=base_prompt, team_id=None):
-    openai.api_key = openai_key
+# Set the OpenAI API key at the top of the file
+openai.api_key = os.environ["OPENAI_API_KEY"]
+
+def run_completion(slack_messages, model, system_prompt=base_prompt, team_id=None):
     messages = [
                 {
                     "role": "system", 
@@ -109,8 +111,8 @@ def summarize_conversation(messages, openai_key):
             openai_key, 
             system_prompt=summary_prompt.replace("<CONVERSATION>", "\n".join([f"{message['name']}: {message['content']}" for message in chunk]))
         )
-        print(f"Chunk summary: {summary}")
-    print(f"Final Summary: {summary}")
+        logging.info(f"Chunk summary: {summary}")
+    logging.info(f"Final Summary: {summary}")
     return summary
 
 # Split array of messages into chunks of 3000 tokens or less
