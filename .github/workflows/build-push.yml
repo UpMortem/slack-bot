@@ -1,9 +1,9 @@
 name: build, test, and push container image.
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   build:
@@ -25,4 +25,4 @@ jobs:
       - name: Test with flask
         run: |
           export FLASK_APP=src/index.py
-          pytest src/tests
+          flask test
