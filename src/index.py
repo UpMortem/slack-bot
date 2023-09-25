@@ -1,5 +1,7 @@
 import os
 import logging
+import click
+import unittest
 from flask import Flask, request
 from slack_bolt.adapter.flask import SlackRequestHandler
 from lib.guards import shared_secret_guard
@@ -19,6 +21,13 @@ def slack_events():
 @shared_secret_guard
 def app_installed_route():
     return handle_app_installed(request)
+
+@click.command(name='test')
+def test():
+    tests = unittest.TestLoader().discover('tests')
+    unittest.TextTestRunner().run(tests)
+
+flask_app.cli.add_command(test)
 
 
 if __name__ == "__main__":
