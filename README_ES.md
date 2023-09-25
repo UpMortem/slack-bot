@@ -1,6 +1,6 @@
 # Haly AI Slack Bot
 
-Un bot de chat impulsado por GPT que puede responder preguntas sobre su organización utilizando búsqueda semántica.
+Un ChatBot impulsado por GPT que puede responder preguntas sobre tu organización utilizando búsqueda semántica.
 
 ## Características
 
@@ -21,7 +21,7 @@ Necesitarás las siguientes variables de entorno:
 
 - `SLACK_BOT_TOKEN`: El token de tu bot de Slack.
 - `SLACK_SIGNING_SECRET`: El secreto de firma de tu aplicación Slack.
-- `OPENAI_API_KEY`: Tu clave API de OpenAI.
+- `OPENAI_API_KEY`: Tu llave API de OpenAI.
 
 ## Licencia
 
