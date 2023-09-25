@@ -44,8 +44,8 @@ Conversation: \n \
 
 MIN_TOKENS_TO_SUMMARIZE = 10000
 
-def run_completion(slack_messages, model, openai_key, system_prompt=base_prompt, team_id=None):
-    openai.api_key = openai_key
+def run_completion(slack_messages, model, openai_key=None, system_prompt=base_prompt, team_id=None):
+    openai.api_key = openai_key if openai_key else os.environ.get("OPENAI_API_KEY", "")
     messages = [
                 {
                     "role": "system", 
