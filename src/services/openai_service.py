@@ -1,7 +1,7 @@
 import openai
 import logging
 from openai.error import AuthenticationError, RateLimitError
-from lib.guards import time_tracker
+from src.lib.guards import time_tracker
 
 # openai.api_key = os.environ["OPENAI_API_KEY"]
 
