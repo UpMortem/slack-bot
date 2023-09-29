@@ -9,6 +9,12 @@ steps:
       - '-f'
       - Dockerfile
     id: Build
+  - name: 'gcr.io/cloud-builders/bandit'
+    args:
+      - '-r'
+      - '.'
+      - '-lll'
+    id: Security
   - name: gcr.io/cloud-builders/docker
     args:
       - push
