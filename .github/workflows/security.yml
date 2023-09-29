@@ -1,0 +1,13 @@
+name: Security Analysis
+on: [push, pull_request]
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+    - name: Run Bandit
+      uses: docker://ghcr.io/tylerauerbeck/bandit:latest
+      with:
+        args: "."
