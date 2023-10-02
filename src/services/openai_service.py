@@ -44,9 +44,12 @@ Conversation: \n \
 
 MIN_TOKENS_TO_SUMMARIZE = 10000
 
+import re
+
 def validate_key(key):
-    # Add your key validation logic here
-    # For example, you can check if the key is in the correct format and doesn't contain any malicious characters
+    # Check if the key is in the correct format
+    if not re.fullmatch(r'[A-Za-z0-9]{32}', key):
+        raise ValueError("Invalid API key. Key should be a 32-character alphanumeric string.")
     return key
 
 def run_completion(slack_messages, model, openai_key, system_prompt=base_prompt, team_id=None):
