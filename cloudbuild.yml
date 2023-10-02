@@ -14,8 +14,6 @@ steps:
       - '-r'
       - '.'
       - '-lll'
-      - '-s'
-      - 'B,H'
     id: Security
   - name: gcr.io/cloud-builders/docker
     args:
