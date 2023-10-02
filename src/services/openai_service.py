@@ -44,7 +44,30 @@ Conversation: \n \
 
 MIN_TOKENS_TO_SUMMARIZE = 10000
 
-# No changes necessary
+def run_completion(slack_messages, model, openai_key=None, system_prompt=base_prompt, team_id=None):
+    openai.api_key = openai_key if openai_key else os.environ.get("OPENAI_API_KEY", "test")
+    messages = [
+                {
+                    "role": "system", 
+                    "content": system_prompt
+                }
+            ] + slack_messages
+    try:
+        completion = openai.ChatCompletion.create(
+            model=model, 
+            temperature=0.7,
+            messages=messages
+        )
+        return completion.choices[0].message.content
+    except AuthenticationError:
+        logging.info(f"Invalid API key for team {team_id}")
+        return "Invalid API key. Please have your Slack admin go to https://billing.haly.ai and edit it under the Your Organization section."
+    except RateLimitError:
+        logging.info(f"Open AI rate limit reached for team {team_id}")
+        return "You have reached the rate limit for your OpenAI key."
+    except Exception as exception:
+        logging.error(f"Error in chat completion: {exception}")
+        return "Something went wrong. Please try again. If the problem persists, please check your API key"
 
 
 def respond_to_user(messages, openai_key, team_id):
