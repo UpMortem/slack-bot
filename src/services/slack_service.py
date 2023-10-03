@@ -122,10 +122,14 @@ def handle_app_mention(event, say):
 
         # Check quota
         if team_data["has_reached_request_limit"] == True:
+            if team_data["product_name"] == "Free plan":
+                limit_reached_message = f"It appears you've exceeded the usage limit. To continue enjoying our services without interruption, kindly get in touch with your organization's administrator on {team_data['owner_email']} and request for a subscription upgrade."
+            else:
+                limit_reached_message = f"It appears you've exceeded the usage limit. Contact support at support@haly.ai to increase your usage limit."
             say(
                 channel=channel,
                 thread_ts=thread_to_reply,
-                text=f"It appears you've exceeded the usage limit. To continue enjoying our services without interruption, kindly get in touch with your organization's administrator on {team_data['owner_email']} and request for a subscription upgrade.",
+                text=limit_reached_message,
                 token=slack_bot_token
             )
             logging.info(f"Organization {team_id} has exceeded the usage limit")
