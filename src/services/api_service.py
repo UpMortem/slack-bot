@@ -69,3 +69,24 @@ def increment_request_count(team_id):
     if (data.get("error") is not None):
         raise Exception(data["error"])
     return
+
+
+def get_team_subscription(team_id):
+    url = f"{BASE_URL}/api/organization/stripe_subscription_by_slack_team_id/{team_id}"
+    headers = {"X-Shared-Secret": SHARED_SECRET}
+    response = requests.get(url=url, headers=headers, timeout=30)
+    data = response.json()
+    if data.get("error") is not None:
+        raise Exception(data["error"])
+    return {
+        "product_name": data["product_name"],
+        "product_id": data["product_id"],
+        "semantic_search_enabled": data["semantic_search_enabled"],
+    }
+
+
+# @todo cache results
+def is_smart_search_available(team_id):
+    subscription = get_team_subscription(team_id)
+    return subscription["semantic_search_enabled"] is True
+
