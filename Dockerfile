@@ -4,7 +4,8 @@ ENV PYTHONUNBUFFERED True
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY src/semantic_search/requirements.txt semantic_search_requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt -r semantic_search_requirements.txt
 
 COPY ./src ./src
 
