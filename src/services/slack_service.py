@@ -1,12 +1,14 @@
-from threading import Thread
 import time
 import os
 import re
 from slack_bolt import App
 from lib.split_string import split_string_into_chunks
+from semantic_search.semantic_search.google_tasks import trigger_indexation
+from semantic_search.semantic_search.load_messages import handle_message_update_and_reindex
+from semantic_search.semantic_search.query import smart_query
 from services.openai_service import respond_to_user
 from lib.retry import retry
-from .api_service import get_team_data, increment_request_count, revoke_token
+from services.api_service import get_team_data, increment_request_count, revoke_token, is_smart_search_available
 import logging
 
 DAILY_MESSAGE_LIMIT = 10
@@ -103,7 +105,7 @@ def handle_tokens_revoked(body, logger):
         print(error)
     return
 
-@slack_app.event(event={"type": re.compile("(message)|(app_mention)"), "subtype": None},  matchers=[no_bot_messages, no_message_changed])
+@slack_app.event(event={"type": re.compile("(app_mention)"), "subtype": None},  matchers=[no_bot_messages, no_message_changed])
 def handle_app_mention(event, say):
     channel = event.get("channel")
     text = event.get("text")
@@ -161,8 +163,19 @@ def handle_app_mention(event, say):
                 or messages
             )
 
+        smart_search_available = is_smart_search_available(team_id)
         start_time = time.perf_counter()
-        response = respond_to_user(messages, openAi_key, team_id)
+
+        search_pattern = r'^<\@\w+>\s+search\s+(.+)$'
+
+        match = re.search(search_pattern, text)
+        if match and smart_search_available:
+            search_query = match.group(1)
+            logging.info(f"Executing Smart Query: {search_query}")
+            response = smart_query(team_id, search_query)
+        else:
+            response = respond_to_user(messages, openAi_key, team_id)
+
         end_time = time.perf_counter()
         print(f"response generated in {round(end_time - start_time, 2)}s")
 
@@ -323,6 +336,8 @@ def handle_some_action(ack, body, logger):
 
 @slack_app.event("message")
 def handle_message_events(body, logger):
+    if is_smart_search_available(body['team_id']):
+        handle_message_update_and_reindex(body)
     logger.debug(body)
 
 @slack_app.event("app_mention")
@@ -364,3 +379,16 @@ def handle_app_installed(request):
                 )
             )
     return "OK"
+
+
+@slack_app.event("member_joined_channel")
+def handle_member_joined(event, body, logger, context):
+    team_id = body['team_id']
+    invited_user_id = event['user']
+    bot_id = context['bot_user_id']
+    if invited_user_id != bot_id:
+        return
+    if not is_smart_search_available(team_id):
+        return
+    logger.info("Haly was added to a channel, trigger indexing here.")
+    trigger_indexation(context['team_id'], context['channel_id'])

@@ -138,7 +138,7 @@ SLACK_USER_ID=U01JZQZQZQZ # Put a your workspace admin user ID if you know it
 - Create a venv at the root of the slack-bot project using `python3 -m virtualenv -p python3 myvenv`
 - To enable the virtual environment run `source myvenv/bin/activate` on Linux/MacOS and `myvenv\Scripts\activate` on Windows - this opens up a terminal into the virtual environment.
 - verify your python is isolated by typing `where python` in the above terminal. It should show a python path within the project.
-- Run `pip install -r "requirements.txt"` to install dependencies in the same terminal
+- Run `pip install -r "requirements.txt" -r "src/semantic_search/requirements.txt"` to install dependencies in the same terminal
 - Run `flask --debug run` to start the dev server in the same terminal
 
 If you use the --debug flag when running flask, the application will rebuild whenever the source code changes.
