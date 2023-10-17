@@ -8,8 +8,6 @@ from .external_services.slack_api import fetch_thread_messages, fetch_channel_me
     is_actual_message, \
     slack_names_map, filter_messages, load_previous_messages, load_subsequent_messages
 
-logging.basicConfig()
-
 
 class Embedding:
     def __init__(self, channel_id, id, text, ts, thread_ts=None, author_id=None):
