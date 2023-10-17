@@ -7,11 +7,11 @@ load_dotenv()
 
 
 def get_openai_key() -> str:
-    return os.environ.get('OPENAI_KEY')
+    return os.environ.get('OPENAI_API_KEY')
 
 
 def get_slack_token() -> str:
-    return os.environ.get('SLACK_TOKEN')
+    return os.environ.get('SLACK_BOT_TOKEN')
 
 
 def get_pinecone_key() -> str:
