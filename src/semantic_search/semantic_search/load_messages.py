@@ -65,6 +65,7 @@ class Embedding:
             'channel_id': self.channel_id,
             'text': self.text,
             'ts': self.ts,
+            'version': 1,
         }
         if self.thread_ts is not None:
             metadata['thread_ts'] = self.thread_ts
