@@ -9,7 +9,7 @@ from .external_services.slack_api import load_previous_messages_with_pointer
 
 logging.basicConfig(level=os.environ["LOG_LEVEL"])
 app = Flask("SemanticSearchIndex")
-BULK_SIZE = 100
+BULK_SIZE = 50
 
 
 @app.route('/handle_task', methods=['POST'])
