@@ -171,7 +171,6 @@ def handle_app_mention(event, say):
         match = re.search(search_pattern, text)
         if match and smart_search_available:
             search_query = match.group(1)
-            logging.info(f"Executing Smart Query: {search_query}")
             response = smart_query(team_id, search_query)
         else:
             response = respond_to_user(messages, openAi_key, team_id)
