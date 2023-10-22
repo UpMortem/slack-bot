@@ -70,7 +70,7 @@ def is_thread(message):
 
 
 def is_actual_message(message):
-    return 'subtype' not in message
+    return ('subtype' not in message) and ('bot_id' not in message)
 
 
 def filter_messages(messages):
