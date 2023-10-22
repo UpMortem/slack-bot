@@ -222,6 +222,8 @@ def handle_message_update_and_reindex(body):
         # processing a message deletion
         channel_id = event['channel']
         message = event['previous_message']
+        if not is_actual_message(message):
+            return
         embedding = slack_message_to_embedding(channel_id, message)
         delete_pinecone_embedding([embedding], get_pinecone_index(), team_id)
         if message.get('thread_ts') is not None:
@@ -237,6 +239,8 @@ def handle_message_update_and_reindex(body):
         # processing a message update
         channel_id = event['channel']
         message = event['previous_message']
+        if not is_actual_message(message):
+            return
         if message.get('thread_ts') is not None:
             # just reindex the whole thread
             index_messages(channel_id, load_previous_messages(channel_id, message.get('thread_ts'), 1), 0, get_pinecone_index(), team_id)
