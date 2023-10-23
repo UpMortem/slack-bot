@@ -32,17 +32,23 @@ def smart_query(namespace, query):
     query_matches = query_results['results'][0]['matches']
 
     messages_for_gpt = [{"id": qm["id"], "text": qm["metadata"]["text"]} for qm in query_matches]
-    prompt = ("I have a list of messages in JSON:\n"
+    prompt = ("I have a list of Slack messages in JSON:\n"
               f"{json.dumps(messages_for_gpt)}\n\n"
-              f"I have the following search query: {query}\n\n"
+              f"I have the following search query from a Slack user: {query}\n\n"
+              "Act as a smart search engine that can infer an answer to the given query"
+              " based on the given information chunks. "
               "Give an answer to the query based off the given messages. Only use the messages that are relevant and "
               "don't make up any answers. Prefer more recent messages.\n"
-              "Be as clear and short as possible and don't use any introductionary words.\n\n"
+              "Be as clear and short as possible and don't use any introductionary words. Omit phrases like, "
+              "\"Based on the messages found.\"\n\n"
               "The output should be a JSON object with the following schema:\n"
               "{\n"
               "   \"answer\": \"A string with the answer to the query\",\n"
               "   \"messages\": [] - an array of IDs (from the JSON given above) from the messages that were used to "
-              "build the answer to the query. Include maximum 3 IDs of the most relevant messages.\n"
+              "build the answer to the query. Include maximum 5 IDs of the most relevant messages. Re-iterate multiple "
+              "times and make sure the IDs in this list correspond to the actual messages that were used to build the "
+              "answer. Sort the IDs according to the value of the related message in the conclusion of the answer, "
+              "from the most valuable to the least valuable.\n"
               "}")
 
     stage_start_time = time.perf_counter()
