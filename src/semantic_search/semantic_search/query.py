@@ -5,11 +5,25 @@ from .external_services.pinecone import get_pinecone_index
 from .external_services.openai import create_embedding, gpt_query
 
 
+def build_slack_message_link(workspace_name, channel_id, message_timestamp, thread_timestamp=None):
+    base_url = f"https://{workspace_name}.slack.com/archives/{channel_id}/"
+
+    message_link_timestamp = message_timestamp.replace('.', '')
+    if thread_timestamp:
+        return f"{base_url}p{message_link_timestamp}?thread_ts={thread_timestamp}&cid={channel_id}"
+
+    return f"{base_url}p{message_link_timestamp}"
+
+
 def build_links_list(namespace: str, matches) -> str:
     if namespace != 'T03QUQ2NFQC':
         return ""
-    links = map(lambda match: f"https://upmortemworkspace.slack.com/archives/{match['metadata']['channel_id']}"
-                              f"/p{match['metadata']['ts'].replace('.', '')}", matches)
+    links = map(lambda match: build_slack_message_link(
+        "upmortemworkspace",
+        match['metadata']['channel_id'],
+        match['metadata']['ts'],
+        match['metadata'].get('thread_ts')
+    ), matches)
     return "\n" + "\n".join(links)
 
 
@@ -23,7 +37,7 @@ def smart_query(namespace, query):
     stage_start_time = time.perf_counter()
     query_results = get_pinecone_index().query(
         queries=[query_vector],
-        top_k=30,
+        top_k=50,
         namespace=namespace,
         include_values=False,
         includeMetadata=True
@@ -32,23 +46,27 @@ def smart_query(namespace, query):
     query_matches = query_results['results'][0]['matches']
 
     messages_for_gpt = [{"id": qm["id"], "text": qm["metadata"]["text"]} for qm in query_matches]
-    prompt = ("I have a list of Slack messages in JSON:\n"
+    prompt = ("Act as a Smart Search Engine that can logically infer an answer to the given query.\n\n"
+              "Here is a list of Slack messages in JSON:\n"
               f"{json.dumps(messages_for_gpt)}\n\n"
-              f"I have the following search query from a Slack user: {query}\n\n"
-              "Act as a smart search engine that can infer an answer to the given query"
-              " based on the given information chunks. "
+              f"A Slack user is looking for an answer to the following search query: {query}\n\n"
               "Give an answer to the query based off the given messages. Only use the messages that are relevant and "
               "don't make up any answers. Prefer more recent messages.\n"
+              "Strictly follow the policies below and don't include wrongs messages.\n"
               "Be as clear and short as possible and don't use any introductionary words. Omit phrases like, "
-              "\"Based on the messages found.\"\n\n"
+              "\"Based on the messages found.\" Exclude search queries and questions from the messages. Rely on "
+              "positive statements.\n\n"
               "The output should be a JSON object with the following schema:\n"
               "{\n"
-              "   \"answer\": \"A string with the answer to the query\",\n"
-              "   \"messages\": [] - an array of IDs (from the JSON given above) from the messages that were used to "
-              "build the answer to the query. Include maximum 5 IDs of the most relevant messages. Re-iterate multiple "
-              "times and make sure the IDs in this list correspond to the actual messages that were used to build the "
-              "answer. Sort the IDs according to the value of the related message in the conclusion of the answer, "
-              "from the most valuable to the least valuable.\n"
+              "   \"messages_explain\": \"List out all message objects from the JSON above that relate to the query."
+              "Describe how each message in this list relates to the query in detail. Use a separate field for that. "
+              "Exclude search queries and Haly/Haly Master mentions from this list. Rely on positive statements.\",\n"
+              "   \"explain\": \"Think through the messages in the messages_explain field above and infer the "
+              "answer to the query. Use strong deduction and explain the conclusion. Be as concise as possible.\",\n"
+              "   \"answer\": \"Based on the explain and messages_explain fields, generate a short and concise "
+              "answer to the query for the end user. Don't include any IDs or other service information.\",\n"
+              "   \"messages\": [ From the messages_explain field, pick top 1 messages in which the last part of the "
+              "message text helped to infer the answer and write their ids in this array ]\n"
               "}")
 
     stage_start_time = time.perf_counter()
