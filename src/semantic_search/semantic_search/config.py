@@ -19,7 +19,7 @@ def get_pinecone_key() -> str:
 
 
 def get_pinecone_environment() -> str:
-    return "asia-southeast1-gcp-free"
+    return os.environ.get('PINECONE_ENVIRONMENT')
 
 
 def get_pinecone_index_name() -> str:
