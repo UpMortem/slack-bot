@@ -73,8 +73,8 @@ def smart_query(namespace, query):
               "answer to the query. Use strong deduction and explain the conclusion. Be as concise as possible.\",\n"
               "   \"answer\": \"Based on the explain and messages_explain fields, generate a short and concise "
               "answer to the query for the end user. Don't include any IDs or other service information.\",\n"
-              "   \"messages\": [ From the messages_explain field, pick top 1 messages in which the last part of the "
-              "message text helped to infer the answer and write their ids in this array ]\n"
+              "   \"messages\": [ From the messages_explain field pick top 1 or 2 messages that were used to infer "
+              "the answer in the explain field and write their IDs in this array ]\n"
               "}")
 
     stage_start_time = time.perf_counter()
