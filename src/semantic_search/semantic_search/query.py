@@ -1,6 +1,7 @@
 import json
 import logging
 import time
+from datetime import date
 from .external_services.pinecone import get_pinecone_index
 from .external_services.openai import create_embedding, gpt_query
 
@@ -27,7 +28,7 @@ def build_links_list(namespace: str, matches) -> str:
     return "\n" + "\n".join(links)
 
 
-def smart_query(namespace, query):
+def smart_query(namespace, query, username: str):
     logging.info(f"Executing Smart Query: {query}")
 
     stage_start_time = time.perf_counter()
@@ -54,17 +55,18 @@ def smart_query(namespace, query):
         }
         for qm in query_matches
     ]
-    prompt = ("Act as a Smart Search Engine that can logically infer an answer to the given query.\n\n"
+    prompt = (f"Act as a Smart Search Engine that can logically infer an answer to the given query. "
+              f"Be aware of today's date: {str(date.today())} and use it in your conclusions.\n\n"
               "Here is a list of Slack messages in JSON:\n"
               f"{json.dumps(messages_for_gpt)}\n\n"
-              f"A Slack user is looking for an answer to the following search query: {query}\n\n"
+              f"{username} is looking for an answer to the following search query: {query}\n\n"
               "Give an answer to the query based off the given messages. Only use the messages that are relevant and "
               "don't make up any answers. Prefer more recent messages.\n"
               "Strictly follow the policies below and don't include wrongs messages.\n"
               "Be as clear and short as possible and don't use any introductionary words. Omit phrases like, "
               "\"Based on the messages found.\" Exclude search queries and questions from the messages. Rely on "
               "positive statements.\n\n"
-              "The output should be a JSON object with the following schema:\n"
+              "The output should be a valid JSON object with the following schema:\n"
               "{\n"
               "   \"messages_explain\": \"List out all message objects from the JSON above that relate to the query."
               "Describe how each message in this list relates to the query in detail. Use a separate field for that. "
