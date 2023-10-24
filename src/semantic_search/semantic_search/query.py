@@ -45,7 +45,15 @@ def smart_query(namespace, query):
     logging.info(f"Smart Query: Pinecone search finished in {round(time.perf_counter() - stage_start_time, 2)}s")
     query_matches = query_results['results'][0]['matches']
 
-    messages_for_gpt = [{"id": qm["id"], "text": qm["metadata"]["text"]} for qm in query_matches]
+    messages_for_gpt = [
+        {
+            "id": qm["id"],
+            "text": qm["metadata"]["text_without_context"]
+            if "text_without_context" in qm["metadata"]
+            else qm["metadata"]["text"]
+        }
+        for qm in query_matches
+    ]
     prompt = ("Act as a Smart Search Engine that can logically infer an answer to the given query.\n\n"
               "Here is a list of Slack messages in JSON:\n"
               f"{json.dumps(messages_for_gpt)}\n\n"

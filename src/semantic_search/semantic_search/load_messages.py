@@ -14,6 +14,7 @@ class Embedding:
         self.channel_id = channel_id
         self.id = id
         self.text = text
+        self.text_without_context = None
         self.ts = ts
         self.thread_ts = thread_ts
         self.author_id = author_id
@@ -37,6 +38,7 @@ class Embedding:
             'channel_id': self.channel_id,
             'id': self.id,
             'text': self.text,
+            'text_without_context': self.text if self.text_without_context is None else self.text_without_context,
             'ts': self.ts,
             'thread_ts': self.thread_ts,
             'author_id': self.author_id,
@@ -44,6 +46,7 @@ class Embedding:
 
     def add_adjacent_messages_context(self, context_messages: List['Embedding']) -> 'Embedding':
         embedding = copy.copy(self)
+        embedding.text_without_context = embedding.text
         prefix = "".join([f"{emb.text}\n\n" for emb in filter(None, context_messages)])
         embedding.text = f"{prefix}{embedding.text}"
         return embedding
@@ -64,6 +67,7 @@ class Embedding:
         metadata = {
             'channel_id': self.channel_id,
             'text': self.text,
+            'text_without_context': self.text if self.text_without_context is None else self.text_without_context,
             'ts': self.ts,
             'version': 1,
         }
