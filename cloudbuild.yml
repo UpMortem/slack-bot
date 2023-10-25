@@ -1,10 +1,11 @@
+# need 2 cpu cores and more mem, also make thingies push to branch instead of tag
 steps:
   - name: gcr.io/cloud-builders/docker
     args:
       - build
       - '--no-cache'
       - '-t'
-      - '$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$TAG_NAME'
+      - '$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA'
       - .
       - '-f'
       - Dockerfile
@@ -12,7 +13,7 @@ steps:
   - name: gcr.io/cloud-builders/docker
     args:
       - push
-      - '$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$TAG_NAME'
+      - '$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA'
     id: Push
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
     args:
@@ -20,15 +21,16 @@ steps:
       - deploy
       - $_SERVICE_NAME
       - '--platform=managed'
-      - '--image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$TAG_NAME'
+      - '--image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA'
       - '--update-secrets=SLACK_BOT_TOKEN=HALY_MASTER_SLACK_BOT_TOKEN:latest,SLACK_SIGNING_SECRET=HALY_MASTER_SLACK_SIGNING_SECRET:latest,OPENAI_API_KEY=HALY_MASTER_OPEN_API_KEY:latest'
       - '--region=us-central1'
       - '--allow-unauthenticated'
       - '--min-instances=2'
+      - '--cpu=2'
     id: Deploy
     entrypoint: gcloud
 images:
-  - '$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$TAG_NAME'
+  - '$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA'
 options:
   substitutionOption: ALLOW_LOOSE
   logging: CLOUD_LOGGING_ONLY
