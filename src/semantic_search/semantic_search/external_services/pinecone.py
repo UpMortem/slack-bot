@@ -1,6 +1,8 @@
 import logging
 import random
 import time
+import requests
+import json
 
 import pinecone
 from ..config import get_pinecone_key, get_pinecone_environment, get_pinecone_index_name
@@ -28,4 +30,34 @@ def test_pinecone_request():
         "time": (finish - start) / 10**9,
         "matches": len(results['matches']),
     }
+
+
+def custom_pinecone_query(query_vector, namespace, top_k):
+    url = f"https://semantic-search-prod-0ddc4d6.svc.us-central1-gcp.pinecone.io/query"
+
+    headers = {
+        "content-type": "application/json",
+        "api-key": get_pinecone_key(),
+        "accept": "application/json",
+    }
+
+    body = {
+        "vector": query_vector,
+        "top_k": top_k,
+        "includeMetadata": True,
+        "includeValues": False,
+        "namespace": namespace,
+    }
+
+    # Send the POST request
+    response = requests.post(url, headers=headers, data=json.dumps(body))
+
+    # Check for a valid response
+    response.raise_for_status()
+
+    print(response.status_code)
+    print(f"--{response.text}--")
+    # Parse and return the response
+    response_data = response.json()
+    return response_data
 
