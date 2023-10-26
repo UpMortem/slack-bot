@@ -3,7 +3,6 @@ import logging
 from flask import Flask, request
 from slack_bolt.adapter.flask import SlackRequestHandler
 from lib.guards import shared_secret_guard
-from semantic_search.semantic_search.external_services.pinecone import test_pinecone_request
 from services.slack_service import slack_app, handle_app_installed
 
 logging.basicConfig(level=os.environ["LOG_LEVEL"])
@@ -20,10 +19,6 @@ def slack_events():
 @shared_secret_guard
 def app_installed_route():
     return handle_app_installed(request)
-
-@flask_app.route("/pinecone-stats", methods=["GET"])
-def test_pinecone():
-    return test_pinecone_request()
 
 
 if __name__ == "__main__":
