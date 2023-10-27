@@ -7,8 +7,6 @@ pinecone.init(api_key=get_pinecone_key(), environment=get_pinecone_environment()
 logging.getLogger("pinecone").setLevel("DEBUG")
 logging.getLogger("urllib3").setLevel("DEBUG")
 logging.getLogger("pinecone.core.client").setLevel("DEBUG")
-logging.getLogger("pinecone.core.grpc.retry").setLevel("DEBUG")
-logging.getLogger("pinecone.core.grpc.index_grpc").setLevel("DEBUG")
 logging.getLogger("pinecone.core.client.rest").setLevel("DEBUG")
 
 
