@@ -1,6 +1,10 @@
 FROM python:3.11.3-slim
 ENV PYTHONUNBUFFERED True
 
+# TO FETCH https://github.com/UpMortem/pinecone-python-client FOR TESTING
+RUN apt update \
+    apt install git
+
 WORKDIR /app
 
 COPY requirements.txt .
