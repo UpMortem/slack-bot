@@ -3,3 +3,4 @@ python-dotenv==1.0.0
 slack-bolt==1.16.1
 openai==0.28
 gunicorn==20.1.0
+gevent==23.9.1
