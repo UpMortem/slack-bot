@@ -16,7 +16,7 @@ def get_pinecone_index() -> 'pinecone.Index':
     return pinecone.Index(get_pinecone_index_name())
 
 
-def query_index(query_vector, top_k, namespace, include_values, include_metadata):
+def query_index(query_vector, top_k, namespace, include_values, include_metadata, trace_id):
     host = f"{get_pinecone_index_name()}-0ddc4d6.svc.{get_pinecone_environment()}.pinecone.io"
     path = "/query"
     headers = {
@@ -31,4 +31,4 @@ def query_index(query_vector, top_k, namespace, include_values, include_metadata
         "includeValues": include_values,
         "namespace": namespace,
     }
-    return send_https_request(host, path, data, headers)
+    return send_https_request(host, path, data, headers, trace_id)
