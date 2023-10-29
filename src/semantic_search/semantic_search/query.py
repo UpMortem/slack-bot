@@ -2,7 +2,7 @@ import json
 import logging
 import time
 from datetime import date
-from .external_services.pinecone import get_pinecone_index
+from .external_services.pinecone import get_pinecone_index, query_index
 from .external_services.openai import create_embedding, gpt_query
 
 
@@ -36,15 +36,23 @@ def smart_query(namespace, query, username: str):
     logging.info(f"Smart Query: embedding created in {round(time.perf_counter() - stage_start_time, 2)}s")
 
     stage_start_time = time.perf_counter()
-    query_results = get_pinecone_index().query(
-        queries=[query_vector],
+    # query_results = get_pinecone_index().query(
+    #     queries=[query_vector],
+    #     top_k=50,
+    #     namespace=namespace,
+    #     include_values=False,
+    #     includeMetadata=True
+    # )
+    query_results = query_index(
+        query_vector=query_vector,
         top_k=50,
         namespace=namespace,
         include_values=False,
-        includeMetadata=True
+        include_metadata=True
     )
     logging.info(f"Smart Query: Pinecone search finished in {round(time.perf_counter() - stage_start_time, 2)}s")
-    query_matches = query_results['results'][0]['matches']
+    # query_matches = query_results['results'][0]['matches']
+    query_matches = json.loads(query_results[3])['matches']
 
     messages_for_gpt = [
         {
