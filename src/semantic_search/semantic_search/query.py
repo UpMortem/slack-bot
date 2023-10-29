@@ -1,6 +1,7 @@
 import json
 import logging
 import time
+import uuid
 from datetime import date
 from .external_services.pinecone import get_pinecone_index, query_index
 from .external_services.openai import create_embedding, gpt_query
@@ -29,11 +30,13 @@ def build_links_list(namespace: str, matches) -> str:
 
 
 def smart_query(namespace, query, username: str):
-    logging.info(f"Executing Smart Query: {query}")
+    trace_id = uuid.uuid4()
+    logging.info(f"Executing Smart Query: {query}, trace_id = {trace_id}")
 
     stage_start_time = time.perf_counter()
     query_vector = create_embedding(query)
-    logging.info(f"Smart Query: embedding created in {round(time.perf_counter() - stage_start_time, 2)}s")
+    logging.info(f"Smart Query: embedding created in {round(time.perf_counter() - stage_start_time, 2)}s, "
+                 f"trace_id = {trace_id}")
 
     stage_start_time = time.perf_counter()
     # query_results = get_pinecone_index().query(
@@ -48,9 +51,11 @@ def smart_query(namespace, query, username: str):
         top_k=50,
         namespace=namespace,
         include_values=False,
-        include_metadata=True
+        include_metadata=True,
+        trace_id=trace_id,
     )
-    logging.info(f"Smart Query: Pinecone search finished in {round(time.perf_counter() - stage_start_time, 2)}s")
+    logging.info(f"Smart Query: Pinecone search finished in {round(time.perf_counter() - stage_start_time, 2)}s, "
+                 f"trace_id = {trace_id}")
     # query_matches = query_results['results'][0]['matches']
     query_matches = json.loads(query_results[3])['matches']
 
@@ -89,7 +94,8 @@ def smart_query(namespace, query, username: str):
 
     stage_start_time = time.perf_counter()
     result = json.loads(gpt_query(prompt))
-    logging.info(f"Smart Query: Request to ChatGPT took {round(time.perf_counter() - stage_start_time, 2)}s")
+    logging.info(f"Smart Query: Request to ChatGPT took {round(time.perf_counter() - stage_start_time, 2)}s, "
+                 f"trace_id = {trace_id}")
 
     used_messages = list(filter(lambda match: match["id"] in result["messages"], query_matches))
 
