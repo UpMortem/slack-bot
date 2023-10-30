@@ -13,6 +13,6 @@ RUN pip install --no-cache-dir -r requirements.txt -r semantic_search_requiremen
 
 COPY ./src ./src
 
-CMD exec gunicorn --bind :$PORT --workers 4 --threads 32 --timeout 120 -k gevent index:flask_app --chdir /app/src
+CMD exec gunicorn --bind :$PORT --workers 2 --threads 8 --timeout 600 -k gevent index:flask_app --chdir /app/src
 
 EXPOSE 8080
