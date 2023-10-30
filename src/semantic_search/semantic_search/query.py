@@ -48,7 +48,7 @@ def smart_query(namespace, query, username: str):
     # )
     query_results = query_index(
         query_vector=query_vector,
-        top_k=50,
+        top_k=30,
         namespace=namespace,
         include_values=False,
         include_metadata=True,

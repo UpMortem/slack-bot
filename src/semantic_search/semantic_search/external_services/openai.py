@@ -1,5 +1,8 @@
+import logging
+import time
 from typing import List, Any
 import openai
+import tiktoken
 from retry import retry
 from ..config import get_openai_key
 
@@ -23,8 +26,23 @@ def create_embeddings(texts: List[str]) -> List[Any]:
 
 @retry(delay=3, backoff=2, tries=8)
 def gpt_query(query: str) -> str:
-    summary = openai.ChatCompletion.create(model="gpt-3.5-turbo-16k", messages=[{"role": "user", "content": query}])
-    return summary.choices[0].message.content.strip()
+    max_tokens = 4097 - count_tokens_for_instruct_model(query)
+    completion = openai.Completion.create(model="gpt-3.5-turbo-instruct", prompt=query, max_tokens=max_tokens)
+    return completion.choices[0].text.strip()
+
+
+def count_tokens_for_instruct_model(text: str) -> int:
+    start_time = time.perf_counter_ns()
+    encoding = tiktoken.encoding_for_model('gpt-3.5-turbo-instruct')
+    tokens_number = len(encoding.encode(text))
+    end_time = time.perf_counter_ns()
+    logging.debug(f"tiktoken: counting the number of tokens took {((end_time - start_time) / 10**9):.3f} "
+                  f"for \"{text}\"")
+    return tokens_number
+
+
+def bootstrap():
+    tiktoken.encoding_for_model('gpt-3.5-turbo-instruct')
 
 
 @retry(delay=3, backoff=2, tries=8)

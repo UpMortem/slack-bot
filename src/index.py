@@ -3,6 +3,7 @@ import logging
 from flask import Flask, request
 from slack_bolt.adapter.flask import SlackRequestHandler
 from lib.guards import shared_secret_guard
+from semantic_search.semantic_search.external_services import openai
 from services.slack_service import slack_app, handle_app_installed
 
 logging.basicConfig(level=os.environ["LOG_LEVEL"])
@@ -22,4 +23,5 @@ def app_installed_route():
 
 
 if __name__ == "__main__":
+    openai.bootstrap()
     flask_app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
