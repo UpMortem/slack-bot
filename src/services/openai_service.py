@@ -31,7 +31,8 @@ Users will sign their messages with their names, you won't. \
 You will respond in markdown format. \
 Your creators and developers are the developers at UpMortem. \
 Previous messages are provided to you summarized. \
-SUMMARY: <SUMMARY>"
+SUMMARY: <SUMMARY>\n\
+Continue the conversation: \n"
 
 summary_prompt="As a professional summarizer, create a concise and comprehensive summary of the provided conversation or part of a conversation, while adhering to these guidelines:\n \
 1. Craft a summary that is detailed, thorough, in-depth, and complex, while maintaining clarity and conciseness. \n \
@@ -53,12 +54,27 @@ def run_completion(slack_messages, model, openai_key, system_prompt=base_prompt,
                 }
             ] + slack_messages
     try:
-        completion = openai.ChatCompletion.create(
-            model=model, 
-            temperature=0.7,
-            messages=messages
-        )
-        return completion.choices[0].message.content
+        if model == "gpt-3.5-turbo-instruct":
+            messages.append({
+                "role": "assistant",
+                "content": "",
+                "name": "Haly"
+            })
+            prompt = "\n".join([f"{message['name'] if 'name' in message else 'System'}: {message['content']}" for message in messages])
+            completion = openai.Completion.create(
+                model=model,
+                temperature=0.7,
+                prompt = prompt,
+                max_tokens=3500 - rough_num_tokens_from_messages(messages),
+            )
+            return completion.choices[0].text
+        else:
+            completion = openai.ChatCompletion.create(
+                model=model, 
+                temperature=0.7,
+                messages=messages
+            )
+            return completion.choices[0].message.content
     except AuthenticationError:
         logging.info(f"Invalid API key for team {team_id}")
         return "Invalid API key. Please have your Slack admin go to https://billing.haly.ai and edit it under the Your Organization section."
@@ -72,13 +88,13 @@ def run_completion(slack_messages, model, openai_key, system_prompt=base_prompt,
 
 def respond_to_user(messages, openai_key, team_id):
     tokens = rough_num_tokens_from_messages(messages)
-    model = "gpt-3.5-turbo" 
+    model = "gpt-3.5-turbo-instruct"
     summary = ""
     if tokens > 3500:
         model = "gpt-3.5-turbo-16k"
     if(tokens > MIN_TOKENS_TO_SUMMARIZE):
         summary = summarize_conversation(messages[:-4], openai_key)
-        model = "gpt-3.5-turbo"
+        model = "gpt-3.5-turbo-instruct"
         response = run_completion(messages[-4:], model, openai_key, system_prompt=base_prompt.replace("<SUMMARY>", summary), team_id=team_id)
     else:
         response = run_completion(messages, model, openai_key, team_id=team_id)
@@ -95,7 +111,7 @@ def rough_num_tokens_from_messages(messages):
             if key == "name":
                 num_tokens += tokens_per_name
     num_tokens += 3
-    return num_tokens
+    return round(num_tokens)
 
 def summarize_conversation(messages, openai_key):
     chunks = chunk_messages(messages, MIN_TOKENS_TO_SUMMARIZE)
