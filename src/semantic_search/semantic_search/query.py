@@ -93,10 +93,13 @@ def smart_query(namespace, query, username: str):
               "}")
 
     stage_start_time = time.perf_counter()
-    result = json.loads(gpt_query(prompt))
-    logging.info(f"Smart Query: Request to ChatGPT took {round(time.perf_counter() - stage_start_time, 2)}s, "
-                 f"trace_id = {trace_id}")
-
-    used_messages = list(filter(lambda match: match["id"] in result["messages"], query_matches))
-
-    return f"{result['answer']}{build_links_list(namespace, used_messages)}"
+    try:
+        result = json.loads(gpt_query(prompt))
+        logging.info(f"Smart Query: Request to ChatGPT took {round(time.perf_counter() - stage_start_time, 2)}s, "
+                     f"trace_id = {trace_id}")
+        used_messages = list(filter(lambda match: match["id"] in result["messages"], query_matches))
+        return f"{result['answer']}{build_links_list(namespace, used_messages)}"
+    except Exception as e:
+        logging.info(f"Smart Query: Request to ChatGPT or response decoding failed {e} "
+                     f"{round(time.perf_counter() - stage_start_time, 2)}s, trace_id = {trace_id}")
+        return str(e)
