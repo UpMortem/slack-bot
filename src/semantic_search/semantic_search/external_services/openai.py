@@ -1,4 +1,6 @@
 import logging
+import math
+import re
 import time
 from typing import List, Any
 import openai
@@ -26,7 +28,7 @@ def create_embeddings(texts: List[str]) -> List[Any]:
 
 @retry(delay=3, backoff=2, tries=8)
 def gpt_query(query: str) -> str:
-    max_tokens = 4097 - count_tokens_for_instruct_model(query)
+    max_tokens = 3300 - estimate_tokens_number(query)
     completion = openai.Completion.create(model="gpt-3.5-turbo-instruct", prompt=query, max_tokens=max_tokens)
     return completion.choices[0].text.strip()
 
@@ -41,8 +43,14 @@ def count_tokens_for_instruct_model(text: str) -> int:
     return tokens_number
 
 
+def estimate_tokens_number(text: str) -> int:
+    words = re.findall(r'\b\w+\b', text)
+    return math.ceil(sum(map(lambda w: len(w) / 2, words)))
+
+
 def bootstrap():
-    tiktoken.encoding_for_model('gpt-3.5-turbo-instruct')
+    # tiktoken.encoding_for_model('gpt-3.5-turbo-instruct')
+    return None
 
 
 @retry(delay=3, backoff=2, tries=8)
