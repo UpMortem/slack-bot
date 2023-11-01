@@ -30,15 +30,17 @@ def build_links_list(namespace: str, matches) -> str:
 
 
 def smart_query(namespace, query, username: str):
+    smart_query_start_time = time.perf_counter()
     trace_id = uuid.uuid4()
     logging.info(f"Executing Smart Query: {query}, trace_id = {trace_id}")
 
-    stage_start_time = time.perf_counter()
+    create_embedding_start_time = time.perf_counter()
     query_vector = create_embedding(query)
-    logging.info(f"Smart Query: embedding created in {round(time.perf_counter() - stage_start_time, 2)}s, "
+    create_embedding_time = time.perf_counter() - create_embedding_start_time
+    logging.info(f"Smart Query: embedding created in {round(create_embedding_time, 2)}s, "
                  f"trace_id = {trace_id}")
 
-    stage_start_time = time.perf_counter()
+    pinecone_search_start_time = time.perf_counter()
     # query_results = get_pinecone_index().query(
     #     queries=[query_vector],
     #     top_k=50,
@@ -54,11 +56,13 @@ def smart_query(namespace, query, username: str):
         include_metadata=True,
         trace_id=trace_id,
     )
-    logging.info(f"Smart Query: Pinecone search finished in {round(time.perf_counter() - stage_start_time, 2)}s, "
-                 f"trace_id = {trace_id}")
     # query_matches = query_results['results'][0]['matches']
     query_matches = json.loads(query_results[3])['matches']
+    pinecone_search_time = time.perf_counter() - pinecone_search_start_time
+    logging.info(f"Smart Query: Pinecone search finished in {round(pinecone_search_time, 2)}s, "
+                 f"trace_id = {trace_id}")
 
+    gpt_request_start_time = time.perf_counter()
     messages_for_gpt = [
         {
             "id": qm["id"],
@@ -93,16 +97,23 @@ def smart_query(namespace, query, username: str):
               "the answer in the explain field and write their IDs in this array ]\n"
               "}")
 
-    stage_start_time = time.perf_counter()
     gpt_response = None
     try:
         gpt_response = gpt_query(prompt)
         result = json.loads(gpt_response)
-        logging.info(f"Smart Query: Request to ChatGPT took {round(time.perf_counter() - stage_start_time, 2)}s, "
+        gpt_request_time = time.perf_counter() - gpt_request_start_time
+        total_time = time.perf_counter() - smart_query_start_time
+        logging.info(f"Smart Query: Request to ChatGPT took {round(gpt_request_time, 2)}s, "
                      f"trace_id = {trace_id}")
         used_messages = list(filter(lambda match: match["id"] in result["messages"], query_matches))
-        return f"{result['answer']}{build_links_list(namespace, used_messages)}"
+        return (f"{result['answer']}{build_links_list(namespace, used_messages)}\n\n"
+                f"[total={total_time:.2f}, create_embedding={create_embedding_time:.2f}, "
+                f"pinecone_search={pinecone_search_time:.2f}, gpt_request={gpt_request_time:.2f}]")
     except Exception as e:
+        gpt_request_time = time.perf_counter() - gpt_request_start_time
+        total_time = time.perf_counter() - smart_query_start_time
         logging.info(f"Smart Query: Request to ChatGPT or response decoding failed {e} "
-                     f"{round(time.perf_counter() - stage_start_time, 2)}s, trace_id = {trace_id}")
-        return f"Error occurred:\n{e}\n\nRaw GPT response:\n{gpt_response}"
+                     f"{round(gpt_request_time, 2)}s, trace_id = {trace_id}")
+        return (f"Error occurred:\n{e}\n\nRaw GPT response:\n{gpt_response}\n\n"
+                f"[total={total_time:.2f}, create_embedding={create_embedding_time:.2f}, "
+                f"pinecone_search={pinecone_search_time:.2f}, gpt_request={gpt_request_time:.2f}]")
