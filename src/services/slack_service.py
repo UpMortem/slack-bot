@@ -1,3 +1,4 @@
+import threading
 import time
 import os
 import re
@@ -334,10 +335,14 @@ def handle_some_action(ack, body, logger):
     logger.debug(body)
 
 @slack_app.event("message")
-def handle_message_events(body, logger):
-    if is_smart_search_available(body['team_id']):
-        handle_message_update_and_reindex(body)
+def hande_message_events(body, logger):
+    threading.Thread(target=handle_semantic_search_update, args=[body]).start()
     logger.debug(body)
+
+def handle_semantic_search_update(body):
+    if not is_smart_search_available(body['team_id']):
+        return None
+    return handle_message_update_and_reindex(body)
 
 @slack_app.event("app_mention")
 def handle_message_events(body, logger):

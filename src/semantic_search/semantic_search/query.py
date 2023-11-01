@@ -79,7 +79,8 @@ def smart_query(namespace, query, username: str):
               "Be as clear and short as possible and don't use any introductionary words. Omit phrases like, "
               "\"Based on the messages found.\" Exclude search queries and questions from the messages. Rely on "
               "positive statements.\n\n"
-              "The output should be a valid JSON object with the following schema:\n"
+              "The output should be a valid JSON object (don't include any surrounding text) with "
+              "the following schema:\n"
               "{\n"
               "   \"messages_explain\": \"List out all message objects from the JSON above that relate to the query."
               "Describe how each message in this list relates to the query in detail. Use a separate field for that. "
@@ -93,8 +94,10 @@ def smart_query(namespace, query, username: str):
               "}")
 
     stage_start_time = time.perf_counter()
+    gpt_response = None
     try:
-        result = json.loads(gpt_query(prompt))
+        gpt_response = gpt_query(prompt)
+        result = json.loads(gpt_response)
         logging.info(f"Smart Query: Request to ChatGPT took {round(time.perf_counter() - stage_start_time, 2)}s, "
                      f"trace_id = {trace_id}")
         used_messages = list(filter(lambda match: match["id"] in result["messages"], query_matches))
@@ -102,4 +105,4 @@ def smart_query(namespace, query, username: str):
     except Exception as e:
         logging.info(f"Smart Query: Request to ChatGPT or response decoding failed {e} "
                      f"{round(time.perf_counter() - stage_start_time, 2)}s, trace_id = {trace_id}")
-        return str(e)
+        return f"Error occurred:\n{e}\n\nRaw GPT response:\n{gpt_response}"
