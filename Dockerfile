@@ -1,4 +1,4 @@
-FROM python:3.11.3-slim
+FROM python:3.12.0-slim
 ENV PYTHONUNBUFFERED True
 
 # TO FETCH https://github.com/UpMortem/pinecone-python-client FOR TESTING
