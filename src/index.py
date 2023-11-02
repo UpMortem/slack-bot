@@ -41,4 +41,4 @@ async def test_smart_query(req: SmartQueryRequest):
 # Running the application with Uvicorn
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(api, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
+    uvicorn.run(api, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
