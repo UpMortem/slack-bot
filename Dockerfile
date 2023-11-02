@@ -13,6 +13,6 @@ RUN pip install --no-cache-dir -r requirements.txt -r semantic_search_requiremen
 
 COPY ./src ./src
 
-CMD exec uvicorn index:api --host 0.0.0.0 --port $PORT --workers 2 --timeout-keep-alive 600 --app-dir /app/src
+CMD exec gunicorn --bind :$PORT --workers 2 --threads 8 --timeout 600 -k gevent index:flask_app --chdir /app/src
 
 EXPOSE 8080
