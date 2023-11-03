@@ -38,6 +38,17 @@ def update_message(channel: str, thread_ts: str, ts: str, text: str, slack_bot_t
     )
     return response["ts"]
 
+def send_message(channel: str, thread_ts: str, text: str, slack_bot_token: str):
+    response = retry(
+        lambda: slack_app.client.chat_postMessage(
+            token=slack_bot_token,
+            channel=channel,
+            thread_ts=thread_ts,
+            text=text
+        )
+    )
+    return response["ts"]
+
 
 def delete_message(channel: str, ts: str, slack_bot_token: str):
     response = retry(lambda: slack_app.client.chat_delete(
@@ -106,8 +117,7 @@ def handle_tokens_revoked(body, logger):
         print(error)
     return
 
-@slack_app.event(event={"type": re.compile("(app_mention)"), "subtype": None},  matchers=[no_bot_messages, no_message_changed])
-def handle_app_mention(event, say):
+def handle_app_mention(event):
     channel = event.get("channel")
     text = event.get("text")
     thread_ts = event.get("thread_ts")
@@ -129,23 +139,22 @@ def handle_app_mention(event, say):
                 limit_reached_message = f"It appears you've exceeded the usage limit. To continue enjoying our services without interruption, kindly get in touch with your organization's administrator on {team_data['owner_email']} and request for a subscription upgrade."
             else:
                 limit_reached_message = f"It appears you've exceeded the usage limit. Contact support at support@haly.ai to increase your usage limit."
-            say(
+            send_message(
                 channel=channel,
                 thread_ts=thread_to_reply,
                 text=limit_reached_message,
-                token=slack_bot_token
+                slack_bot_token=slack_bot_token
             )
             logging.info(f"Organization {team_id} has exceeded the usage limit")
             return
 
         # Send 'thinking' message while we process the request
-        response = say(
+        msg_ts = send_message(
             channel=channel,
             thread_ts=thread_to_reply,
             text="Thinking...",
-            token=slack_bot_token
+            slack_bot_token=slack_bot_token
         )
-        msg_ts = response["ts"]
         
         # Get messages in thread
         username = get_user_name(user, slack_bot_token)
@@ -183,11 +192,11 @@ def handle_app_mention(event, say):
             chunks = split_string_into_chunks(response, MESSAGE_LENGTH_LIMIT)
             update_message(channel, thread_to_reply, msg_ts, chunks[0], slack_bot_token)
             for chunk in chunks[1:]:
-                say(
+                send_message(
                     channel=channel,
                     thread_ts=thread_to_reply,
                     text=chunk,
-                    token=slack_bot_token
+                    slack_bot_token=slack_bot_token
                 )
         else:
             update_message(channel, thread_to_reply, msg_ts, response, slack_bot_token)
@@ -200,7 +209,7 @@ def handle_app_mention(event, say):
             
     except Exception as error:
         # Improve error handling
-        print(error)
+        logging.error(error, exc_info=True)
         return
 
 # Respond to the App Home opened event
@@ -210,9 +219,9 @@ def update_home_tab(client, event, say, context):
         team_id = context.get("team_id")
         team_data = get_team_data(team_id)
         if(event["tab"] == "home" and event["view"] is None):
-            say(
+            send_message(
                 text=HOME_TAB_MESSAGE,
-                token=team_data["slack_bot_token"]
+                slack_bot_token=team_data["slack_bot_token"]
             )
         current_user = event["user"]
         owner_user = team_data["owner_slack_id"]
