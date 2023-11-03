@@ -4,6 +4,7 @@ import os
 import re
 from slack_bolt import App
 from lib.split_string import split_string_into_chunks
+from semantic_search.semantic_search.config import get_openai_key
 from semantic_search.semantic_search.google_tasks import trigger_indexation
 from semantic_search.semantic_search.load_messages import handle_message_update_and_reindex
 from semantic_search.semantic_search.query import smart_query
@@ -131,7 +132,7 @@ def handle_app_mention(event):
         # Get neccessary keys
         team_data = get_team_data(team_id)
         slack_bot_token = team_data["slack_bot_token"]
-        openAi_key = team_data["openai_key"] if team_data["openai_key"] else os.environ["OPENAI_API_KEY"]
+        openAi_key = team_data["openai_key"] if team_data["openai_key"] else get_openai_key()
 
         # Check quota
         if team_data["has_reached_request_limit"] == True:

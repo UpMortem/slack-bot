@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from lib.guards import shared_secret_guard
 from semantic_search.semantic_search.external_services import openai
 from semantic_search.semantic_search.query import smart_query
+from semantic_search.semantic_search.config import get_slack_signing_secret
 from services.slack_service import handle_app_mention, no_bot_messages, no_message_changed, handle_app_installed
 from fastapi import BackgroundTasks, FastAPI, Request, Response, HTTPException
 from fastapi.responses import JSONResponse
@@ -20,7 +21,7 @@ logging.basicConfig(level=os.environ["LOG_LEVEL"])
 
 app = FastAPI()
 
-SLACK_SIGNING_SECRET = os.environ.get("SLACK_SIGNING_SECRET")
+SLACK_SIGNING_SECRET = get_slack_signing_secret()
 
 async def verify_slack_request(request: Request) -> bool:
     request_body = await request.body()
