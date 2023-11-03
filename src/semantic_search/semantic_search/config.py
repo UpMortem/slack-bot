@@ -28,3 +28,6 @@ def get_pinecone_index_name() -> str:
 
 def index_service_endpoint() -> Optional[str]:
     return os.environ.get('INDEX_SERVICE_ENDPOINT')
+
+def get_slack_signing_secret() -> str:
+    return os.environ.get('SLACK_SIGNING_SECRET')
