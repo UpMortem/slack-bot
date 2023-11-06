@@ -192,7 +192,14 @@ def handle_app_mention(event, say):
                     token=slack_bot_token
                 )
         else:
-            update_message(channel, thread_to_reply, msg_ts, response, slack_bot_token)
+            delete_message(channel, msg_ts, slack_bot_token)
+            say(
+                channel=channel,
+                thread_ts=thread_to_reply,
+                text=response,
+                token=slack_bot_token,
+                unfurl_links=True,
+            )
 
         # Increment request count
         try:
@@ -202,7 +209,7 @@ def handle_app_mention(event, say):
             
     except Exception as error:
         # Improve error handling
-        print(error)
+        logging.error(error, exc_info=True)
         return
 
 # Respond to the App Home opened event
@@ -400,7 +407,7 @@ def handle_member_joined(event, body, logger, context):
     logger.info("Haly was added to a channel, trigger indexing here.")
     trigger_indexation(context['team_id'], context['channel_id'])
 
-def semantic_search_reply(message, links, experts=[]):
+def semantic_search_reply_blocks(message, links, experts=[]):
     link_sections = [
         {
             "type": "section",
@@ -424,59 +431,57 @@ def semantic_search_reply(message, links, experts=[]):
         } for expert in experts
     ]
 
-    return {
-        "blocks": [
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": message
-                }
-            },
-            {
-                "type": "divider"
-            },
-            {
-                "type": "rich_text",
-                "elements": [
-                    {
-                        "type": "rich_text_section",
-                        "elements": [
-                            {
-                                "type": "text",
-                                "text": "Messages used to generate this response",
-                                "style": {
-                                    "bold": True
-                                }
-                            }
-                        ]
-                    }
-                ]
-            },
-            *link_sections,
-            {
-                "type": "divider"
-            },
-            {
-                "type": "rich_text",
-                "elements": [
-                    {
-                        "type": "rich_text_section",
-                        "elements": [
-                            {
-                                "type": "text",
-                                "text": "Possible Subject Matter Experts",
-                                "style": {
-                                    "bold": True
-                                }
-                            }
-                        ]
-                    }
-                ]
-            },
-            {
-                "type": "actions",
-                "elements": [*experts_section]
+    return [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": message
             }
-        ]
-    }
+        },
+        {
+            "type": "divider"
+        },
+        {
+            "type": "rich_text",
+            "elements": [
+                {
+                    "type": "rich_text_section",
+                    "elements": [
+                        {
+                            "type": "text",
+                            "text": "Possible Subject Matter Experts",
+                            "style": {
+                                "bold": True
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "actions",
+            "elements": [*experts_section]
+        },
+            {
+            "type": "divider"
+        },
+        {
+            "type": "rich_text",
+            "elements": [
+                {
+                    "type": "rich_text_section",
+                    "elements": [
+                        {
+                            "type": "text",
+                            "text": "Messages used to generate this response",
+                            "style": {
+                                "bold": True
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        *link_sections,
+    ]
