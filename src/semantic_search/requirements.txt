@@ -2,8 +2,7 @@ flask==2.3.3
 python-dotenv==1.0.0
 google-cloud-tasks==2.14.2
 openai==0.28.0
-git+https://github.com/UpMortem/pinecone-python-client.git@additional-logs#egg=pinecone-client
+pinecone-client==2.2.4
 retry==0.9.2
 slack-sdk==3.21.3
 tabulate==0.9.0
-tiktoken==0.5.1

@@ -1,10 +1,7 @@
-import logging
 import math
 import re
-import time
 from typing import List, Any
 import openai
-import tiktoken
 from retry import retry
 from ..config import get_openai_key
 
@@ -33,24 +30,9 @@ def gpt_query(query: str) -> str:
     return completion.choices[0].text.strip()
 
 
-def count_tokens_for_instruct_model(text: str) -> int:
-    start_time = time.perf_counter_ns()
-    encoding = tiktoken.encoding_for_model('gpt-3.5-turbo-instruct')
-    tokens_number = len(encoding.encode(text))
-    end_time = time.perf_counter_ns()
-    logging.debug(f"tiktoken: counting the number of tokens took {((end_time - start_time) / 10**9):.3f} "
-                  f"for \"{text}\"")
-    return tokens_number
-
-
 def estimate_tokens_number(text: str) -> int:
     words = re.findall(r'\b\w+\b', text)
     return math.ceil(sum(map(lambda w: len(w) / 2, words)))
-
-
-def bootstrap():
-    # tiktoken.encoding_for_model('gpt-3.5-turbo-instruct')
-    return None
 
 
 @retry(delay=3, backoff=2, tries=8)
