@@ -26,14 +26,16 @@ logging.basicConfig(level=os.environ["LOG_LEVEL"])
 
 users_map = {}
 
-def update_message(channel: str, thread_ts: str, ts: str, text: str, slack_bot_token: str):
+def update_message(channel: str, thread_ts: str, ts: str, text: str, slack_bot_token: str, blocks=None):
     response = retry(
         lambda: slack_app.client.chat_update(
             token=slack_bot_token,
             channel=channel,
             ts=ts,
             thread_ts=thread_ts,
-            text=text
+            text=text,
+            blocks=blocks,
+            unfurl_links=True,
         )
     )
     return response["ts"]
@@ -143,7 +145,8 @@ def handle_app_mention(event, say):
             channel=channel,
             thread_ts=thread_to_reply,
             text="Thinking...",
-            token=slack_bot_token
+            token=slack_bot_token,
+            unfurl_links=True,
         )
         msg_ts = response["ts"]
         
@@ -190,7 +193,14 @@ def handle_app_mention(event, say):
                     token=slack_bot_token
                 )
         else:
-            update_message(channel, thread_to_reply, msg_ts, response, slack_bot_token)
+            delete_message(channel, msg_ts, slack_bot_token)
+            say(
+                channel=channel,
+                thread_ts=thread_to_reply,
+                text=response,
+                token=slack_bot_token,
+                unfurl_links=True,
+            )
 
         # Increment request count
         try:
@@ -200,7 +210,7 @@ def handle_app_mention(event, say):
             
     except Exception as error:
         # Improve error handling
-        print(error)
+        logging.error(error, exc_info=True)
         return
 
 # Respond to the App Home opened event
@@ -328,6 +338,11 @@ def handle_some_action(ack, body, logger):
 def handle_some_action(ack, body, logger):
     ack()
     logger.debug(body)
+    
+@slack_app.action(re.compile("link_to_expert\w*"))
+def handle_some_action(ack, body, logger):
+    ack()
+    logger.debug(body)
 
 @slack_app.action("upgrade_plan")
 def handle_some_action(ack, body, logger):
@@ -396,3 +411,82 @@ def handle_member_joined(event, body, logger, context):
         return
     logger.info("Haly was added to a channel, trigger indexing here.")
     trigger_indexation(context['team_id'], context['channel_id'])
+
+def semantic_search_reply_blocks(message, links, experts=[]):
+    link_sections = [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": f"<{link}>"
+            }
+        }
+        for link in links
+    ]
+    
+    experts_section = [
+        {
+            "type": "button",
+            "text": {
+                "type": "plain_text",
+                "text": expert["name"],
+            },
+            "url": expert["url"],
+            "action_id": f"link_to_expert_{expert['name']}"
+        } for expert in experts
+    ]
+
+    return [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": message
+            }
+        },
+        {
+            "type": "divider"
+        },
+        {
+            "type": "rich_text",
+            "elements": [
+                {
+                    "type": "rich_text_section",
+                    "elements": [
+                        {
+                            "type": "text",
+                            "text": "Possible Subject Matter Experts",
+                            "style": {
+                                "bold": True
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "actions",
+            "elements": [*experts_section]
+        },
+            {
+            "type": "divider"
+        },
+        {
+            "type": "rich_text",
+            "elements": [
+                {
+                    "type": "rich_text_section",
+                    "elements": [
+                        {
+                            "type": "text",
+                            "text": "Messages used to generate this response",
+                            "style": {
+                                "bold": True
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        *link_sections,
+    ]
