@@ -5,7 +5,7 @@
 
 ## What Can Haly Do?
 Haly is an expert in everything - from providing answers and explanations, to generating ideas and assisting with various tasks. Here are just a few things Haly can help you with:
-- **Semantic Search (SmartSearch)**: Ask questions about your organization and Haly will tell you an answer based on previous public channel messages and who are the subject matter experts.
+- **Semantic Search**: Ask questions about your organization and Haly will tell you an answer based on previous public channel messages and who are the subject matter experts. Great for auditing for sensitive messages.
 - **Emails, Blogs, and Marketing Content**: Need assistance with writing? Haly is at your service, providing suggestions, editing, and even helping with translations.
 - **Information and Research**: Curious about a specific topic? Haly can provide you with accurate information and conduct in-depth research to satisfy your curiosity.
 - **Problem Solving and Troubleshooting**: Stuck with a difficult problem? Haly loves challenges and is always ready to help you find the best solution.
