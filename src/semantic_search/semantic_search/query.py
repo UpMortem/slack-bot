@@ -3,7 +3,7 @@ import logging
 import time
 import uuid
 from datetime import date
-from .external_services.pinecone import get_pinecone_index, query_index
+from .external_services.pinecone import get_pinecone_index
 from .external_services.openai import create_embedding, gpt_query
 
 
@@ -41,23 +41,14 @@ def smart_query(namespace, query, username: str):
                  f"trace_id = {trace_id}")
 
     pinecone_search_start_time = time.perf_counter()
-    # query_results = get_pinecone_index().query(
-    #     queries=[query_vector],
-    #     top_k=50,
-    #     namespace=namespace,
-    #     include_values=False,
-    #     includeMetadata=True
-    # )
-    query_results = query_index(
-        query_vector=query_vector,
-        top_k=30,
+    query_results = get_pinecone_index().query(
+        queries=[query_vector],
+        top_k=50,
         namespace=namespace,
         include_values=False,
-        include_metadata=True,
-        trace_id=trace_id,
+        includeMetadata=True
     )
-    # query_matches = query_results['results'][0]['matches']
-    query_matches = json.loads(query_results[3])['matches']
+    query_matches = query_results['results'][0]['matches']
     pinecone_search_time = time.perf_counter() - pinecone_search_start_time
     logging.info(f"Smart Query: Pinecone search finished in {round(pinecone_search_time, 2)}s, "
                  f"trace_id = {trace_id}")
