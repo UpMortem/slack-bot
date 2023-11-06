@@ -1,5 +1,3 @@
-import math
-import re
 from typing import List, Any
 import openai
 from retry import retry
@@ -25,14 +23,12 @@ def create_embeddings(texts: List[str]) -> List[Any]:
 
 @retry(delay=3, backoff=2, tries=8)
 def gpt_query(query: str) -> str:
-    max_tokens = 3300 - estimate_tokens_number(query)
-    completion = openai.Completion.create(model="gpt-3.5-turbo-instruct", prompt=query, max_tokens=max_tokens)
-    return completion.choices[0].text.strip()
-
-
-def estimate_tokens_number(text: str) -> int:
-    words = re.findall(r'\b\w+\b', text)
-    return math.ceil(sum(map(lambda w: len(w) / 2, words)))
+    summary = openai.ChatCompletion.create(
+        model="gpt-4-1106-preview",
+        messages=[{"role": "user", "content": query}],
+        response_format={"type": "json_object"},
+    )
+    return summary.choices[0].message.content.strip()
 
 
 @retry(delay=3, backoff=2, tries=8)
