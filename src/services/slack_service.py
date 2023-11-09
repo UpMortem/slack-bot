@@ -350,8 +350,12 @@ def handle_some_action(ack, body, logger):
     logger.debug(body)
 
 @slack_app.event("message")
-def hande_message_events(body, logger):
-    threading.Thread(target=handle_semantic_search_update, args=[body]).start()
+def hande_message_events(body, event, say, logger):
+    # DM's to haly
+    if event.get("channel_type") == "im" and no_message_changed(event):
+        return handle_app_mention(event, say)
+    else:
+        threading.Thread(target=handle_semantic_search_update, args=[body]).start()
     logger.debug(body)
 
 def handle_semantic_search_update(body):
