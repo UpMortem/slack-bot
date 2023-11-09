@@ -112,7 +112,7 @@ def handle_tokens_revoked(body, logger):
     return
 
 @slack_app.event(event={"type": re.compile("(app_mention)"), "subtype": None},  matchers=[no_bot_messages, no_message_changed])
-def handle_app_mention(event, say):
+def handle_message_to_bot(event, say):
     channel = event.get("channel")
     text = event.get("text")
     thread_ts = event.get("thread_ts")
@@ -356,7 +356,7 @@ def handle_some_action(ack, body, logger):
 def hande_message_events(body, event, say, logger):
     # DM's to haly
     if is_direct_message(event) and no_message_changed(event):
-        return handle_app_mention(event, say)
+        return handle_message_to_bot(event, say)
     else:
         threading.Thread(target=handle_semantic_search_update, args=[body]).start()
     logger.debug(body)
