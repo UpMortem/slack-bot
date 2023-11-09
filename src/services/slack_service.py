@@ -94,6 +94,9 @@ def no_bot_messages(message) -> bool:
 def no_message_changed(event) -> bool:
     return event.get("subtype") != "message_changed" and event.get("edited") is None
 
+def is_direct_message(event) -> bool:
+    return event.get("channel_type") == "im"
+
 
 #########################################
 # Event Handlers
@@ -352,7 +355,7 @@ def handle_some_action(ack, body, logger):
 @slack_app.event("message")
 def hande_message_events(body, event, say, logger):
     # DM's to haly
-    if event.get("channel_type") == "im" and no_message_changed(event):
+    if is_direct_message(event) and no_message_changed(event):
         return handle_app_mention(event, say)
     else:
         threading.Thread(target=handle_semantic_search_update, args=[body]).start()
