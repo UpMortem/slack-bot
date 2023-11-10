@@ -1,7 +1,9 @@
+import os
 import openai
 import logging
-from openai.error import AuthenticationError, RateLimitError
+from openai.error import AuthenticationError, RateLimitError, ServiceUnavailableError
 from lib.guards import time_tracker
+from services.replicate_service import replicate_chat
 
 # openai.api_key = os.environ["OPENAI_API_KEY"]
 
@@ -42,7 +44,9 @@ You are given the conversation thread. When creating the thread, give relevance 
 Conversation: \n \
 `<CONVERSATION>` \n"
 
-MIN_TOKENS_TO_SUMMARIZE = 10000
+USE_FALLBACK = os.environ.get("USE_FALLBACK", False) == "true"
+# 3000 if using llama2 
+MIN_TOKENS_TO_SUMMARIZE = 10000 if not USE_FALLBACK else 3000
 
 def run_completion(slack_messages, model, openai_key, system_prompt=base_prompt, team_id=None):
     openai.api_key = openai_key
@@ -53,18 +57,24 @@ def run_completion(slack_messages, model, openai_key, system_prompt=base_prompt,
                 }
             ] + slack_messages
     try:
-        completion = openai.ChatCompletion.create(
-            model=model, 
-            temperature=0.7,
-            messages=messages
-        )
-        return completion.choices[0].message.content
+        if USE_FALLBACK:
+            return replicate_chat(system_prompt, list(map(lambda message: message['content'], slack_messages)))
+        else:
+            completion = openai.ChatCompletion.create(
+                model=model, 
+                temperature=0.7,
+                messages=messages
+            )
+            return completion.choices[0].message.content
     except AuthenticationError:
         logging.info(f"Invalid API key for team {team_id}")
         return "Invalid API key. Please have your Slack admin go to https://billing.haly.ai and edit it under the Your Organization section."
     except RateLimitError:
         logging.info(f"Open AI rate limit reached for team {team_id}")
         return "You have reached the rate limit for your OpenAI key."
+    except ServiceUnavailableError:
+        logging.info(f"Open AI service unavailable, using fallback model")
+        return replicate_chat(system_prompt, list(map(lambda message: message['content'], slack_messages)))
     except Exception as exception:
         logging.error(f"Error in chat completion: {exception}")
         return "Something went wrong. Please try again. If the problem persists, please check your API key"
