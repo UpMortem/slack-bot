@@ -153,6 +153,20 @@ You will need ngrok to test the Bot locally
 ![image](https://github.com/UpMortem/slack-bot/assets/5354324/f46f93f3-8713-432f-812f-1ba6218fc07f)
 
 
+## Credits
+
+This project is built on top of the following open source libraries:
+
+- [Flask](https://flask.palletsprojects.com/) (version 2.3.3)
+- [python-dotenv](https://pypi.org/project/python-dotenv/) (version 1.0.0)
+- [slack-bolt](https://slack.dev/bolt-python/) (version 1.18.0)
+- [openai](https://pypi.org/project/openai/) (version 0.28)
+- [gunicorn](https://gunicorn.org/) (version 20.1.0)
+- [gevent](https://www.gevent.org/) (version 23.9.1)
+
+We are grateful to the developers and contributors of these libraries for their valuable work.
+
+
 ## Releases
 
  - Cloud build trigger will run every time you push a git tag that matches `^v.*$`
