@@ -1,6 +1,9 @@
 from typing import List, Any
 import openai
+from openai.error import TryAgain, Timeout, RateLimitError, APIConnectionError, APIError
 from retry import retry
+
+from semantic_search.semantic_search.external_services.llm import run_completion
 from ..config import get_openai_key
 
 openai.api_key = get_openai_key()
@@ -16,12 +19,13 @@ def create_embedding(text):
 @retry(delay=3, backoff=2, tries=8)
 def create_embeddings(texts: List[str]) -> List[Any]:
     model = "text-embedding-ada-002"
-    texts = list(map(lambda text: text.replace("\n", " "), texts))  # explain why we need this
+    # explain why we need this
+    texts = list(map(lambda text: text.replace("\n", " "), texts))
     embeddings = openai.Embedding.create(input=texts, model=model)
     return list(map(lambda e: e.embedding, embeddings['data']))
 
 
-@retry(delay=3, backoff=2, tries=8)
+@retry(exceptions=[TryAgain, Timeout, RateLimitError, APIConnectionError, APIError], delay=3, backoff=2, tries=8)
 def gpt_query(query: str) -> str:
     summary = openai.ChatCompletion.create(
         model="gpt-4-1106-preview",
@@ -34,7 +38,7 @@ def gpt_query(query: str) -> str:
 @retry(delay=3, backoff=2, tries=8)
 def gpt_summarize_thread(thread_messages: List[str]) -> str:
     text = "\n".join(thread_messages)
-    return gpt_query(
+    return run_completion(
         "Summarize the following conversation and include channel information and usernames and actual names of the "
         "author of the message: " + text
     )
