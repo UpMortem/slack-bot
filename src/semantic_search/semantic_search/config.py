@@ -28,3 +28,7 @@ def get_pinecone_index_name() -> str:
 
 def index_service_endpoint() -> Optional[str]:
     return os.environ.get('INDEX_SERVICE_ENDPOINT')
+
+
+def get_google_tasks_service_account() -> str:
+    return os.environ.get('GOOGLE_TASKS_SERVICE_ACCOUNT')

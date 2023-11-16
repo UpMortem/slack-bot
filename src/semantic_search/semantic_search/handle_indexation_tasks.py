@@ -2,10 +2,13 @@ import json
 import logging
 import os
 from flask import Flask, request, jsonify
+from .config import get_google_tasks_service_account
 from .external_services.pinecone import get_pinecone_index
 from .google_tasks import queue_task
 from .load_messages import index_messages
 from .external_services.slack_api import load_previous_messages_with_pointer
+import google.auth.transport.requests
+import google.oauth2.id_token
 
 logging.basicConfig(level=os.environ["LOG_LEVEL"])
 app = Flask("SemanticSearchIndex")
@@ -14,6 +17,21 @@ BULK_SIZE = 50
 
 @app.route('/handle_task', methods=['POST'])
 def handle_task():
+    id_token = request.headers.get('Authorization').split(' ').pop()
+    if not id_token:
+        return jsonify({'message': 'No token found'}), 401
+
+    try:
+        request_adapter = google.auth.transport.requests.Request()
+        decoded_token = google.oauth2.id_token.verify_oauth2_token(
+            id_token, request_adapter
+        )
+        if decoded_token['email'] != get_google_tasks_service_account():
+            return jsonify({'status': 'unauthenticated'}), 401
+    except Exception as e:
+        logging.error("Handle Task Auth Error: %s", e, exc_info=True)
+        return jsonify({'status': 'unauthenticated'}), 401
+
     try:
         logging.info(f"Processing task with payload: {request.data.decode('utf-8')}")
         payload = json.loads(request.data.decode('utf-8'))
@@ -37,9 +55,9 @@ def handle_task():
             })
         return jsonify({'status': 'success'}), 200
 
-    except ValueError as ve:
-        logging.error("An error occurred while handling a task: %s", ve, exc_info=True)
-        return jsonify({'status': 'unauthenticated'}), 401
+    except Exception as e:
+        logging.error("Handle Task Error: %s", e, exc_info=True)
+        return jsonify({'status': 'error'}), 500
 
 
 def start():
