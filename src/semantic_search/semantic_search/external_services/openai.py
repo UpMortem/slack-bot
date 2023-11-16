@@ -3,7 +3,6 @@ import openai
 from openai.error import TryAgain, Timeout, RateLimitError, APIConnectionError, APIError
 from retry import retry
 
-from semantic_search.semantic_search.external_services.llm import run_completion
 from ..config import get_openai_key
 
 openai.api_key = get_openai_key()
@@ -33,12 +32,3 @@ def gpt_query(query: str) -> str:
         response_format={"type": "json_object"},
     )
     return summary.choices[0].message.content.strip()
-
-
-@retry(delay=3, backoff=2, tries=8)
-def gpt_summarize_thread(thread_messages: List[str]) -> str:
-    text = "\n".join(thread_messages)
-    return run_completion(
-        "Summarize the following conversation and include channel information and usernames and actual names of the "
-        "author of the message: " + text
-    )

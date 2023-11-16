@@ -1,5 +1,5 @@
 import replicate
-import retry
+from retry import retry
 
 
 @retry(delay=3, backoff=2, tries=8)

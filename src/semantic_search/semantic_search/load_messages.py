@@ -1,8 +1,10 @@
 import logging
 import copy
 from typing import List, Dict
+
+from semantic_search.semantic_search.external_services.llm import summarize_thread
 from .external_services.pinecone import get_pinecone_index
-from .external_services.openai import create_embeddings, gpt_summarize_thread
+from .external_services.openai import create_embeddings
 import datetime
 from .external_services.slack_api import fetch_thread_messages, fetch_channel_messages, is_thread, \
     is_actual_message, \
@@ -157,7 +159,7 @@ def index_messages(channel_id, messages, start_from, pinecone_index, pinecone_na
 
             try:
                 logging.info(f"  - Summarizing thread {message['thread_ts']}")
-                summary = gpt_summarize_thread(raw_messages_for_summary)
+                summary = summarize_thread(raw_messages_for_summary)
                 messages_for_embedding.append(thread_header.convert_to_summary(summary))
             except:
                 logging.info(f"  - Failed to summarize - {message['thread_ts']}")
