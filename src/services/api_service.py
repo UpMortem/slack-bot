@@ -35,7 +35,7 @@ def revoke_token(team_id):
     url = f"{BASE_URL}/api/slack/revoke_token"
     headers = {"X-Shared-Secret": os.environ["API_SHARED_SECRET"]}
     # make post request with team id and token as data
-    print("revoking tokens for team: " + str(team_id))
+    logging.debug("revoking tokens for team: " + str(team_id))
     response = requests.post(
         url=url,
         headers=headers,
