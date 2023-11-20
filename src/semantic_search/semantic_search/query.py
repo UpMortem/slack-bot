@@ -6,7 +6,7 @@ from datetime import date
 
 from semantic_search.semantic_search.external_services.llm import run_completion
 from .external_services.pinecone import get_pinecone_index
-from .external_services.openai import create_embedding, gpt_query
+from .external_services.openai import create_embedding, gpt_query_json
 
 
 def build_slack_message_link(workspace_name, channel_id, message_timestamp, thread_timestamp=None):

@@ -105,10 +105,11 @@ def is_direct_message(event) -> bool:
 @slack_app.event("tokens_revoked")
 def handle_tokens_revoked(body, logger):
     team_id = body.get("team_id")
-    try:
-        revoke_token(team_id)
-    except Exception as error:
-        print(error)
+    if len(body.get("event").get("tokens").get("bot")) > 0:
+        try:
+            revoke_token(team_id)
+        except Exception as error:
+            logging.error(error, exc_info=True)
     return
 
 @slack_app.event(event={"type": re.compile("(app_mention)"), "subtype": None},  matchers=[no_bot_messages, no_message_changed])
@@ -355,7 +356,7 @@ def handle_some_action(ack, body, logger):
 @slack_app.event("message")
 def hande_message_events(body, event, say, logger):
     # DM's to haly
-    if is_direct_message(event) and no_message_changed(event):
+    if is_direct_message(event) and no_message_changed(event) and event.get("bot_id") is None:
         return handle_message_to_bot(event, say)
     else:
         threading.Thread(target=handle_semantic_search_update, args=[body]).start()
