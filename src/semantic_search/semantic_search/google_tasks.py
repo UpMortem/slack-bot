@@ -20,9 +20,9 @@ def create_http_task_with_token(
         http_request=tasks_v2.HttpRequest(
             http_method=tasks_v2.HttpMethod.POST,
             url=url,
-            oidc_token=tasks_v2.OidcToken(
-                service_account_email=get_google_tasks_service_account(),
-            ),
+            # oidc_token=tasks_v2.OidcToken(
+            #     service_account_email=get_google_tasks_service_account(),
+            # ),
             body=payload,
         ),
     )
