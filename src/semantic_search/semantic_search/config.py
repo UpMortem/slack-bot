@@ -32,3 +32,11 @@ def index_service_endpoint() -> Optional[str]:
 
 def get_google_tasks_service_account() -> str:
     return os.environ.get('GOOGLE_TASKS_SERVICE_ACCOUNT')
+
+
+def get_api_base_url() -> str:
+    return os.environ.get('API_BASE_URL')
+
+
+def get_api_shared_secret() -> str:
+    return os.environ.get('API_SHARED_SECRET')
