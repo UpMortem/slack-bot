@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+CONTEXT_LENGTH = 5
+
 
 def get_openai_key() -> str:
     return os.environ.get('OPENAI_API_KEY')
