@@ -14,6 +14,10 @@ def get_slack_token() -> str:
     return os.environ.get('SLACK_BOT_TOKEN')
 
 
+def get_slack_user_id() -> str:
+    return os.environ.get('SLACK_USER_ID')
+
+
 def get_pinecone_key() -> str:
     return os.environ.get('PINECONE_KEY')
 
@@ -40,3 +44,7 @@ def get_api_base_url() -> str:
 
 def get_api_shared_secret() -> str:
     return os.environ.get('API_SHARED_SECRET')
+
+
+def is_standalone() -> bool:
+    return os.environ.get('STANDALONE') == 'true'
