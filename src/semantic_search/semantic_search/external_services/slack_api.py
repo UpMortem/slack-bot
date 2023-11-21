@@ -7,6 +7,7 @@ from slack_sdk.errors import SlackApiError
 from slack_sdk import WebClient
 
 from .internal_api import get_team_data
+from ..config import CONTEXT_LENGTH
 
 slack_names = {}
 
@@ -113,12 +114,12 @@ def slack_names_map(team_id):
 
 
 def load_previous_messages(team_id: str, channel_id: str, last_message_id: str, number: int):
-    (messages, _) = load_previous_messages_with_pointer(team_id, channel_id, last_message_id, number)
+    (messages, ) = load_previous_messages_with_pointer(team_id, channel_id, last_message_id, number)
     return messages[-number:]
 
 
 def load_subsequent_messages(team_id: str, channel_id: str, first_message_id: str, number: int):
-    (messages, _) = load_subsequent_messages_with_pointer(team_id, channel_id, first_message_id, number)
+    (messages, ) = load_subsequent_messages_with_pointer(team_id, channel_id, first_message_id, number)
     return messages[:number]
 
 
@@ -129,11 +130,11 @@ def load_previous_messages_with_pointer(team_id: str, channel_id: str, last_mess
     messages = fetch_several_messages_before(team_id, channel_id, last_message_id, bulk_size)
     actual_messages = filter_messages(messages)
     if len(messages) < bulk_size:
-        return [actual_messages, None]
+        return [actual_messages, None, 0]
     if len(actual_messages) < minimum_number:
         return load_previous_messages_with_pointer(team_id, channel_id, last_message_id, minimum_number, bulk_size * 2)
-    pointer = actual_messages[0]['ts'] if len(actual_messages) == 1 else actual_messages[1]['ts']
-    return [actual_messages, pointer]
+    context_tail = actual_messages[:CONTEXT_LENGTH - 1]
+    return [actual_messages, context_tail[-1]['ts'], len(context_tail)]
 
 
 def load_subsequent_messages_with_pointer(team_id: str, channel_id: str, first_message_id: str, minimum_number: int,
