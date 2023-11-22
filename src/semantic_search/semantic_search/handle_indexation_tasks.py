@@ -40,10 +40,9 @@ def handle_task():
         namespace = payload['namespace']
         channel_id = payload['channel_id']
         last_message_id = payload['last_message_id']
-        [messages, next_last_message] = load_previous_messages_with_pointer(channel_id, last_message_id, BULK_SIZE)
+        [messages, next_last_message, start_from] = load_previous_messages_with_pointer(namespace, channel_id, last_message_id, BULK_SIZE)
         logging.info(f"Task: {task_id}, Iteration Number: {iteration_number}")
         logging.info(f"Task: {task_id}, Number of Actual Messages: {len(messages)}")
-        start_from = 0 if next_last_message is None else 2
         index_messages(channel_id, messages, start_from, get_pinecone_index(), namespace)
         if next_last_message is not None:
             queue_task({

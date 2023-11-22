@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+CONTEXT_LENGTH = 5
+
 
 def get_openai_key() -> str:
     return os.environ.get('OPENAI_API_KEY')
@@ -12,6 +14,10 @@ def get_openai_key() -> str:
 
 def get_slack_token() -> str:
     return os.environ.get('SLACK_BOT_TOKEN')
+
+
+def get_slack_user_id() -> str:
+    return os.environ.get('SLACK_USER_ID')
 
 
 def get_pinecone_key() -> str:
@@ -32,3 +38,15 @@ def index_service_endpoint() -> Optional[str]:
 
 def get_google_tasks_service_account() -> str:
     return os.environ.get('GOOGLE_TASKS_SERVICE_ACCOUNT')
+
+
+def get_api_base_url() -> str:
+    return os.environ.get('API_BASE_URL')
+
+
+def get_api_shared_secret() -> str:
+    return os.environ.get('API_SHARED_SECRET')
+
+
+def is_standalone() -> bool:
+    return os.environ.get('STANDALONE') == 'true'

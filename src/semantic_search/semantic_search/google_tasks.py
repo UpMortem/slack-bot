@@ -32,7 +32,8 @@ def create_http_task_with_token(
         tasks_v2.CreateTaskRequest(
             parent=client.queue_path(project, location, queue),
             task=task,
-        )
+        ),
+        timeout=30,
     )
 
 

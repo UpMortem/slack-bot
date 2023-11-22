@@ -10,6 +10,10 @@ SHARED_SECRET = os.environ["API_SHARED_SECRET"]
 STANDALONE = os.environ["STANDALONE"] == "true"
 
 def get_team_data(team_id):
+    """
+    Makes a call to the internal API to retrieve the team data.
+    This function is currently duplicated in src/semantic_search/semantic_search/external_services/internal_api.
+    """
     if STANDALONE:
         return team_data_stub
     url = f"{BASE_URL}/api/organization/get_team_data/{team_id}"

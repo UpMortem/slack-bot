@@ -3,6 +3,7 @@ import copy
 from typing import List, Dict
 
 from semantic_search.semantic_search.external_services.llm import summarize_thread
+from .config import CONTEXT_LENGTH
 from .external_services.pinecone import get_pinecone_index
 from .external_services.openai import create_embeddings
 import datetime
@@ -49,7 +50,8 @@ class Embedding:
     def add_adjacent_messages_context(self, context_messages: List['Embedding']) -> 'Embedding':
         embedding = copy.copy(self)
         embedding.text_without_context = embedding.text
-        prefix = "".join([f"{emb.text}\n\n" for emb in filter(None, context_messages)])
+        prefix = "".join(
+            [f"{emb.text}\n\n" for emb in filter(None, context_messages)])
         embedding.text = f"{prefix}{embedding.text}"
         return embedding
 
@@ -103,12 +105,9 @@ def replace_ids_with_names(embeddings: List[Embedding], team_id: str) -> List[Em
 def enrich_with_adjacent_messages(embeddings: List[Embedding]) -> List[Embedding]:
     updated_embeddings = []
     for i in range(len(embeddings)):
-        first_context_embedding = embeddings[i - 2] if i - 2 >= 0 else None
-        second_context_embedding = embeddings[i - 1] if i - 1 >= 0 else None
-        updated_embeddings.append(embeddings[i].add_adjacent_messages_context([
-            first_context_embedding,
-            second_context_embedding
-        ]))
+        context_embeddings = embeddings[max(0, i - CONTEXT_LENGTH + 1): i]
+        updated_embeddings.append(
+            embeddings[i].add_adjacent_messages_context(context_embeddings))
     return updated_embeddings
 
 
@@ -117,8 +116,8 @@ def enrich_with_datetime(embeddings: List[Embedding]) -> List[Embedding]:
 
 
 def attach_header(embeddings: List[Embedding], header: Embedding) -> List[Embedding]:
-    part_with_header = embeddings[:2]
-    part_without_header = embeddings[2:]
+    part_with_header = embeddings[:CONTEXT_LENGTH - 1]
+    part_without_header = embeddings[CONTEXT_LENGTH - 1:]
     return part_with_header + [embedding.add_header(header) for embedding in part_without_header]
 
 
@@ -139,51 +138,66 @@ def index_messages(channel_id, messages, start_from, pinecone_index, pinecone_na
         if is_thread(message):
             logging.info(
                 f"{counter + 1}/{total_messages} Appending thread messages for {message['ts']} : {message['thread_ts']}")
-            thread_messages = filter_messages(fetch_thread_messages(channel_id, message["thread_ts"]))
-            thread_embeddings = generate_embeddings(channel_id, thread_messages)
-            thread_embeddings = replace_ids_with_names(thread_embeddings, team_id=pinecone_namespace)
+            thread_messages = filter_messages(fetch_thread_messages(
+                pinecone_namespace, channel_id, message["thread_ts"]))
+            thread_embeddings = generate_embeddings(
+                channel_id, thread_messages)
+            thread_embeddings = replace_ids_with_names(
+                thread_embeddings, team_id=pinecone_namespace)
             thread_embeddings = enrich_with_datetime(thread_embeddings)
             thread_header = thread_embeddings[0]
-            raw_messages_for_summary = list(map(lambda e: e.text, thread_embeddings))
+            raw_messages_for_summary = list(
+                map(lambda e: e.text, thread_embeddings))
 
-            additional_context_embeddings = [
-                embeddings_without_context[counter - 2] if counter >= 2 else None,
-                embeddings_without_context[counter - 1] if counter >= 1 else None,
-            ]
-            additional_context_embeddings = list(filter(None, additional_context_embeddings))
+            additional_context_embeddings = embeddings_without_context[max(
+                0, counter - CONTEXT_LENGTH + 1):counter]
+            additional_context_embeddings = list(
+                filter(None, additional_context_embeddings))
             thread_embeddings = additional_context_embeddings + thread_embeddings
-            thread_embeddings = enrich_with_adjacent_messages(thread_embeddings)[len(additional_context_embeddings):]
+            thread_embeddings = enrich_with_adjacent_messages(
+                thread_embeddings)[len(additional_context_embeddings):]
             thread_embeddings = attach_header(thread_embeddings, thread_header)
             messages_for_embedding += thread_embeddings
-            logging.info(f"  - Appended {str(len(thread_messages))} thread messages")
+            logging.info(
+                f"  - Appended {str(len(thread_messages))} thread messages")
 
             try:
                 logging.info(f"  - Summarizing thread {message['thread_ts']}")
                 summary = summarize_thread(raw_messages_for_summary)
-                messages_for_embedding.append(thread_header.convert_to_summary(summary))
+                messages_for_embedding.append(
+                    thread_header.convert_to_summary(summary))
             except:
-                logging.info(f"  - Failed to summarize - {message['thread_ts']}")
+                logging.info(
+                    f"  - Failed to summarize - {message['thread_ts']}")
         elif is_actual_message(message):
-            logging.info(f"{counter + 1}/{total_messages} Appending regular message {message['ts']}")
+            logging.info(
+                f"{counter + 1}/{total_messages} Appending regular message {message['ts']}")
             messages_for_embedding.append(embedding)
 
-    logging.info(f"Generated {str(len(messages_for_embedding))} messages for embedding")
-    messages_for_embedding = list(filter(lambda emb_t: len(emb_t.text) != 0, messages_for_embedding))
-    logging.info(f"Removed empty messages, {str(len(messages_for_embedding))} messages left")
+    logging.info(
+        f"Generated {str(len(messages_for_embedding))} messages for embedding")
+    messages_for_embedding = list(
+        filter(lambda emb_t: len(emb_t.text) != 0, messages_for_embedding))
+    logging.info(
+        f"Removed empty messages, {str(len(messages_for_embedding))} messages left")
 
-    insert_pinecone_embeddings(messages_for_embedding, pinecone_index, pinecone_namespace)
+    insert_pinecone_embeddings(
+        messages_for_embedding, pinecone_index, pinecone_namespace)
 
 
 def index_whole_channel(pinecone_namespace, channel_id):
     logging.info(f"Fetching all messages from {channel_id} channel")
-    messages = list(reversed(fetch_channel_messages(channel_id)))
+    messages = list(reversed(fetch_channel_messages(
+        pinecone_namespace, channel_id)))
     logging.info(f"Loaded {str(len(messages))} messages")
 
     messages = filter_messages(messages)
     total_messages = len(messages)
-    logging.info(f"Filtering out service messages, left {str(total_messages)} messages")
+    logging.info(
+        f"Filtering out service messages, left {str(total_messages)} messages")
 
-    index_messages(channel_id, messages, 0, get_pinecone_index(), pinecone_namespace)
+    index_messages(channel_id, messages, 0,
+                   get_pinecone_index(), pinecone_namespace)
 
 
 def insert_pinecone_embeddings(messages_for_embedding: List[Embedding], pinecone_index, pinecone_namespace):
@@ -193,10 +207,12 @@ def insert_pinecone_embeddings(messages_for_embedding: List[Embedding], pinecone
                         range(0, len(messages_for_embedding), chunk_size)]
     counter = 0
     for chunk in embedding_chunks:
-        logging.info(f"Inserting a chunk of Pinecone embeddings: [{counter} - {counter + len(chunk) - 1}]")
+        logging.info(
+            f"Inserting a chunk of Pinecone embeddings: [{counter} - {counter + len(chunk) - 1}]")
         counter += len(chunk)
         try:
-            embeddings = create_embeddings([embedding_message.text for embedding_message in chunk])
+            embeddings = create_embeddings(
+                [embedding_message.text for embedding_message in chunk])
             items = []
 
             for i in range(len(chunk)):
@@ -234,12 +250,15 @@ def handle_message_update_and_reindex(body):
         delete_pinecone_embedding([embedding], get_pinecone_index(), team_id)
         if message.get('thread_ts') is not None:
             # just reindex the whole thread
-            index_messages(channel_id, load_previous_messages(channel_id, message.get('thread_ts'), 1), 0, get_pinecone_index(), team_id)
+            index_messages(channel_id, load_previous_messages(
+                team_id, channel_id, message.get('thread_ts'), 1), 0, get_pinecone_index(), team_id)
             return
         message_ts = message['ts']
-        messages_for_reindex = load_previous_messages(channel_id, message_ts, 2) + load_subsequent_messages(channel_id, message_ts, 2)
+        messages_for_reindex = load_previous_messages(
+            team_id, channel_id, message_ts, CONTEXT_LENGTH - 1) + load_subsequent_messages(team_id, channel_id, message_ts, CONTEXT_LENGTH - 1)
         # reindex surrounding messages
-        index_messages(channel_id, messages_for_reindex, 2, get_pinecone_index(), team_id)
+        index_messages(channel_id, messages_for_reindex,
+                       CONTEXT_LENGTH - 1, get_pinecone_index(), team_id)
         return
     if 'subtype' in event and event['subtype'] == 'message_changed':
         # processing a message update
@@ -249,12 +268,15 @@ def handle_message_update_and_reindex(body):
             return
         if message.get('thread_ts') is not None:
             # just reindex the whole thread
-            index_messages(channel_id, load_previous_messages(channel_id, message.get('thread_ts'), 1), 0, get_pinecone_index(), team_id)
+            index_messages(channel_id, load_previous_messages(
+                team_id, channel_id, message.get('thread_ts'), 1), 0, get_pinecone_index(), team_id)
             return
         message_ts = message['ts']
-        messages_for_reindex = load_previous_messages(channel_id, message_ts, 3) + load_subsequent_messages(channel_id, message_ts, 3)[1:]
+        messages_for_reindex = load_previous_messages(
+            team_id, channel_id, message_ts, CONTEXT_LENGTH) + load_subsequent_messages(team_id, channel_id, message_ts, CONTEXT_LENGTH)[1:]
         # reindex surrounding messages
-        index_messages(channel_id, messages_for_reindex, 2, get_pinecone_index(), team_id)
+        index_messages(channel_id, messages_for_reindex,
+                       CONTEXT_LENGTH - 1, get_pinecone_index(), team_id)
         return
     if 'subtype' not in event:
         message = event
@@ -266,7 +288,8 @@ def handle_message_update_and_reindex(body):
     channel_id = event['channel']
     if not is_actual_message(message):
         return
-    embeddings = generate_embedding_for_message(team_id, channel_id, message_id, thread_ts)
+    embeddings = generate_embedding_for_message(
+        team_id, channel_id, message_id, thread_ts)
     insert_pinecone_embeddings(
         embeddings,
         get_pinecone_index(),
@@ -277,7 +300,7 @@ def handle_message_update_and_reindex(body):
 def generate_embedding_for_message(team_id, channel_id, message_id, thread_ts) -> List['Embedding']:
     if thread_ts is not None:
         # should be improved
-        thread_messages = fetch_thread_messages(channel_id, thread_ts)
+        thread_messages = fetch_thread_messages(team_id, channel_id, thread_ts)
         thread_messages = filter_messages(thread_messages)
         thread_head = thread_messages[0]
         head_embedding = generate_embeddings(channel_id, [thread_head])[0]
@@ -291,15 +314,19 @@ def generate_embedding_for_message(team_id, channel_id, message_id, thread_ts) -
         if message_index is None:
             return []
         messages = thread_messages[:message_index + 1]
-        additional_messages = [] if len(messages) > 2 else load_previous_messages(channel_id, thread_head['ts'], 4 - len(messages))[:-1]
-        embeddings = generate_embeddings(channel_id, additional_messages) + generate_embeddings(channel_id, messages)
+        additional_messages = [] if len(messages) >= CONTEXT_LENGTH else load_previous_messages(
+            team_id, channel_id, thread_head['ts'], CONTEXT_LENGTH + 1 - len(messages))[:-1]
+        embeddings = generate_embeddings(
+            channel_id, additional_messages) + generate_embeddings(channel_id, messages)
         embeddings = replace_ids_with_names(embeddings, team_id)
         embeddings = enrich_with_datetime(embeddings)
-        embeddings = enrich_with_adjacent_messages(embeddings)[len(additional_messages):]
+        embeddings = enrich_with_adjacent_messages(
+            embeddings)[len(additional_messages):]
         embeddings = attach_header(embeddings, head_embedding)
         return embeddings[-1:]
 
-    embeddings = generate_embeddings(channel_id, load_previous_messages(channel_id, message_id, 3))
+    embeddings = generate_embeddings(channel_id, load_previous_messages(
+        team_id, channel_id, message_id, CONTEXT_LENGTH))
     embeddings = replace_ids_with_names(embeddings, team_id)
     embeddings = enrich_with_datetime(embeddings)
     embeddings = enrich_with_adjacent_messages(embeddings)
