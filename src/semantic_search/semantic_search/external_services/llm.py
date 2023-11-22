@@ -1,14 +1,14 @@
 from typing import List
 import logging
 from openai.error import ServiceUnavailableError
-from semantic_search.semantic_search.external_services.openai import gpt_query
+from semantic_search.semantic_search.external_services.openai import gpt_query, gpt_query_json
 
 from semantic_search.semantic_search.external_services.replicate import replicate_query
 
 
-def run_completion(prompt: str):
+def run_completion(prompt: str, return_json: bool = False):
     try:
-        return gpt_query(prompt)
+        return gpt_query_json(prompt) if return_json else gpt_query(prompt)
     except ServiceUnavailableError:
         logging.debug(f"Open AI service unavailable, using fallback model")
         return replicate_query(prompt)

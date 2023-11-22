@@ -93,7 +93,7 @@ def smart_query(namespace, query, username: str):
 
     gpt_response = None
     try:
-        gpt_response = run_completion(prompt)
+        gpt_response = run_completion(prompt, return_json=True)
         result = json.loads(gpt_response)
         gpt_request_time = time.perf_counter() - gpt_request_start_time
         total_time = time.perf_counter() - smart_query_start_time
