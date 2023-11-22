@@ -1,6 +1,8 @@
 from typing import List, Any
 import openai
+from openai.error import TryAgain, Timeout, RateLimitError, APIConnectionError, APIError
 from retry import retry
+
 from ..config import get_openai_key
 
 openai.api_key = get_openai_key()
@@ -16,12 +18,13 @@ def create_embedding(text):
 @retry(delay=3, backoff=2, tries=8)
 def create_embeddings(texts: List[str]) -> List[Any]:
     model = "text-embedding-ada-002"
-    texts = list(map(lambda text: text.replace("\n", " "), texts))  # explain why we need this
+    # explain why we need this
+    texts = list(map(lambda text: text.replace("\n", " "), texts))
     embeddings = openai.Embedding.create(input=texts, model=model)
     return list(map(lambda e: e.embedding, embeddings['data']))
 
 
-@retry(delay=3, backoff=2, tries=8)
+@retry(exceptions=[TryAgain, Timeout, RateLimitError, APIConnectionError, APIError], delay=3, backoff=2, tries=8)
 def gpt_query_json(query: str) -> str:
     summary = openai.ChatCompletion.create(
         model="gpt-4-1106-preview",
