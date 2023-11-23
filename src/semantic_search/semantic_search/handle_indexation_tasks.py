@@ -12,7 +12,7 @@ import google.oauth2.id_token
 
 logging.basicConfig(level=os.environ["LOG_LEVEL"])
 app = Flask("SemanticSearchIndex")
-BULK_SIZE = 50
+BULK_SIZE = 20
 
 
 @app.route('/handle_task', methods=['POST'])
