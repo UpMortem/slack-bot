@@ -57,7 +57,3 @@ def handle_task():
     except Exception as e:
         logging.error("Handle Task Error: %s", e, exc_info=True)
         return jsonify({'status': 'error'}), 500
-
-
-def start():
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
