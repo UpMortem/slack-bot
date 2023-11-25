@@ -4,7 +4,7 @@ import time
 import uuid
 from datetime import date
 from .external_services.pinecone import get_pinecone_index
-from .external_services.openai import create_embedding, gpt_query_json
+from .external_services.openai import create_embedding, query_chat_gpt_forcing_json
 
 
 def build_slack_message_link(workspace_name, channel_id, message_timestamp, thread_timestamp=None):
@@ -91,7 +91,7 @@ def smart_query(namespace, query, username: str):
 
     gpt_response = None
     try:
-        gpt_response = gpt_query_json(prompt)
+        gpt_response = query_chat_gpt_forcing_json(prompt)
         result = json.loads(gpt_response)
         gpt_request_time = time.perf_counter() - gpt_request_start_time
         total_time = time.perf_counter() - smart_query_start_time

@@ -22,7 +22,7 @@ def create_embeddings(texts: List[str]) -> List[Any]:
 
 
 @retry(delay=3, backoff=2, tries=8)
-def gpt_query_json(query: str) -> str:
+def query_chat_gpt_forcing_json(query: str) -> str:
     summary = openai.ChatCompletion.create(
         model="gpt-4-1106-preview",
         messages=[{"role": "user", "content": query}],
@@ -32,7 +32,7 @@ def gpt_query_json(query: str) -> str:
 
 
 @retry(delay=3, backoff=2, tries=8)
-def gpt_query(query: str) -> str:
+def query_chat_gpt(query: str) -> str:
     summary = openai.ChatCompletion.create(
         model="gpt-4-1106-preview",
         messages=[{"role": "user", "content": query}],
@@ -41,9 +41,25 @@ def gpt_query(query: str) -> str:
 
 
 @retry(delay=3, backoff=2, tries=8)
-def gpt_summarize_thread(thread_messages: List[str]) -> str:
+def query_chat_gpt_3_5(query: str) -> str:
+    summary = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": query}],
+    )
+    return summary.choices[0].message.content.strip()
+
+
+def summarize_thread_with_chat_gpt(thread_messages: List[str]) -> str:
     text = "\n".join(thread_messages)
-    return gpt_query(
+    return query_chat_gpt(
+        "Summarize the following conversation and include channel information and usernames and actual names of the "
+        "author of the message: " + text
+    )
+
+
+def summarize_thread_with_chat_gpt_3_5(thread_messages: List[str]) -> str:
+    text = "\n".join(thread_messages)
+    return query_chat_gpt_3_5(
         "Summarize the following conversation and include channel information and usernames and actual names of the "
         "author of the message: " + text
     )
