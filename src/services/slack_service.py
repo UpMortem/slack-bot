@@ -207,18 +207,11 @@ def handle_message_to_bot(event, say):
                     channel=channel,
                     thread_ts=thread_to_reply,
                     text=chunk,
-                    blocks=reply_blocks(chunk),
                     token=slack_bot_token
                 )
         else:
-            delete_message(channel, msg_ts, slack_bot_token)
-            say(
-                channel=channel,
-                thread_ts=thread_to_reply,
-                text=response,
-                blocks=reply_blocks(response),
-                token=slack_bot_token,
-                unfurl_links=True,
+            update_message(
+                channel, thread_to_reply, msg_ts, response, slack_bot_token
             )
 
         # Send links used in Semantic Search as a new Message
@@ -227,7 +220,7 @@ def handle_message_to_bot(event, say):
                 channel=channel,
                 thread_ts=thread_to_reply,
                 text="",
-                blocks=reply_blocks("", links=messages_links),
+                blocks=reply_blocks(message="", links=messages_links),
                 token=slack_bot_token
             )
 
