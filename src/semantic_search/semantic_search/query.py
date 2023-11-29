@@ -26,7 +26,7 @@ def build_links_list(namespace: str, matches) -> str:
         match['metadata']['ts'],
         match['metadata'].get('thread_ts')
     ), matches)
-    return "\n" + "\n".join(links)
+    return links
 
 
 def smart_query(namespace, query, username: str):
@@ -95,15 +95,28 @@ def smart_query(namespace, query, username: str):
         result = json.loads(gpt_response)
         gpt_request_time = time.perf_counter() - gpt_request_start_time
         total_time = time.perf_counter() - smart_query_start_time
-        logging.info(f"Smart Query: Request to ChatGPT took {round(gpt_request_time, 2)}s, "
-                     f"trace_id = {trace_id}")
-        logging.info(f"Smart Query Completed in {round(total_time, 2)}s, trace_id = {trace_id}")
-        used_messages = list(filter(lambda match: match["id"] in result["messages"], query_matches))
-        return f"{result['answer']}{build_links_list(namespace, used_messages)}"
+        logging.info(
+            f"Smart Query: Request to ChatGPT took {round(gpt_request_time, 2)}s, "
+            f"trace_id = {trace_id}"
+        )
+        logging.info(
+            f"Smart Query Completed in {round(total_time, 2)}s, trace_id = {trace_id}"
+        )
+        used_messages = list(
+            filter(
+                lambda match: match["id"]
+                in result["messages"], query_matches
+            )
+        )
+        return result['answer'], build_links_list(namespace, used_messages)
     except Exception as e:
         gpt_request_time = time.perf_counter() - gpt_request_start_time
         total_time = time.perf_counter() - smart_query_start_time
-        logging.info(f"Smart Query: Request to ChatGPT or response decoding failed {e} "
-                     f"{round(gpt_request_time, 2)}s, trace_id = {trace_id}")
-        logging.info(f"Smart Query Completed in {round(total_time, 2)}s, trace_id = {trace_id}")
+        logging.info(
+            f"Smart Query: Request to ChatGPT or response decoding failed {e} "
+            f"{round(gpt_request_time, 2)}s, trace_id = {trace_id}"
+        )
+        logging.info(
+            f"Smart Query Completed in {round(total_time, 2)}s, trace_id = {trace_id}"
+        )
         return f"Error occurred:\n{e}\n\nRaw GPT response:\n{gpt_response}"
