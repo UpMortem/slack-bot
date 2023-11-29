@@ -13,8 +13,8 @@ from services.api_service import get_team_data, increment_request_count, revoke_
 import logging
 
 DAILY_MESSAGE_LIMIT = 10
-MESSAGE_LENGTH_LIMIT = 3500
-HOME_TAB_MESSAGE=":wave: Hi there! I'm Haly, your friendly Slack chatbot! I'm here to assist you with any questions or problems you may have. With my expertise in a wide range of topics, feel free to ask me anything!\n\
+MESSAGE_LENGTH_LIMIT = 2500
+HOME_TAB_MESSAGE = ":wave: Hi there! I'm Haly, your friendly Slack chatbot! I'm here to assist you with any questions or problems you may have. With my expertise in a wide range of topics, feel free to ask me anything!\n\
 I'm not just a good listener, but also ready to help you out. Just type in your question or request, and I'll do my best to provide you with the information you need.\n\
 You can reach out to me by direct messaging me or by adding me to a public channel. Just tag me using @Haly to start a conversation. Let's get chatting!"
 WELCOME_MESSAGE = "Hello everyone! I'm Haly, your friendly chatbot. I'm here to help you with anything you need. Just mention my name (@Haly) and ask your question, and I'll do my best to assist you. Looking forward to chatting with you all! 😊"
@@ -25,6 +25,7 @@ slack_app = App()
 logging.basicConfig(level=os.environ["LOG_LEVEL"])
 
 users_map = {}
+
 
 def update_message(channel: str, thread_ts: str, ts: str, text: str, slack_bot_token: str, blocks=None):
     response = retry(
@@ -88,11 +89,14 @@ def get_user_name(user_id: str, slack_bot_token: str):
         users_map[user_id] = user["user"]["profile"]["real_name"]
     return users_map[user_id].capitalize()
 
+
 def no_bot_messages(message) -> bool:
     return message.get("bot_id") is None if message else True
 
+
 def no_message_changed(event) -> bool:
     return event.get("subtype") != "message_changed" and event.get("edited") is None
+
 
 def is_direct_message(event) -> bool:
     return event.get("channel_type") == "im"
@@ -111,6 +115,7 @@ def handle_tokens_revoked(body, logger):
         except Exception as error:
             logging.error(error, exc_info=True)
     return
+
 
 @slack_app.event(event={"type": re.compile("(app_mention)"), "subtype": None},  matchers=[no_bot_messages, no_message_changed])
 def handle_message_to_bot(event, say):
@@ -141,7 +146,8 @@ def handle_message_to_bot(event, say):
                 text=limit_reached_message,
                 token=slack_bot_token
             )
-            logging.info(f"Organization {team_id} has exceeded the usage limit")
+            logging.info(
+                f"Organization {team_id} has exceeded the usage limit")
             return
 
         # Send 'thinking' message while we process the request
@@ -153,7 +159,7 @@ def handle_message_to_bot(event, say):
             unfurl_links=True,
         )
         msg_ts = response["ts"]
-        
+
         # Get messages in thread
         username = get_user_name(user, slack_bot_token)
         messages = [{
@@ -179,16 +185,23 @@ def handle_message_to_bot(event, say):
         match = re.search(search_pattern, text)
         if match and smart_search_available:
             search_query = match.group(1)
-            response = smart_query(team_id, search_query, username)
+            response, messages_links = smart_query(
+                team_id, search_query, username)
         else:
             response = respond_to_user(messages, openAi_key, team_id)
+            messages_links = []
 
         end_time = time.perf_counter()
-        print(f"response generated in {round(end_time - start_time, 2)}s")
+        logging.info(
+            f"response generated in {round(end_time - start_time, 2)}s"
+        )
 
-        if(len(response) > MESSAGE_LENGTH_LIMIT):
+        # Split message because Slack doesn't allow long messages
+        if (len(response) > MESSAGE_LENGTH_LIMIT):
             chunks = split_string_into_chunks(response, MESSAGE_LENGTH_LIMIT)
-            update_message(channel, thread_to_reply, msg_ts, chunks[0], slack_bot_token)
+            update_message(
+                channel, thread_to_reply, msg_ts, chunks[0], slack_bot_token
+            )
             for chunk in chunks[1:]:
                 say(
                     channel=channel,
@@ -197,13 +210,18 @@ def handle_message_to_bot(event, say):
                     token=slack_bot_token
                 )
         else:
-            delete_message(channel, msg_ts, slack_bot_token)
+            update_message(
+                channel, thread_to_reply, msg_ts, response, slack_bot_token
+            )
+
+        # Send links used in Semantic Search as a new Message
+        if len(messages_links) > 0:
             say(
                 channel=channel,
                 thread_ts=thread_to_reply,
-                text=response,
-                token=slack_bot_token,
-                unfurl_links=True,
+                text="",
+                blocks=reply_blocks(message="", links=messages_links),
+                token=slack_bot_token
             )
 
         # Increment request count
@@ -211,19 +229,19 @@ def handle_message_to_bot(event, say):
             increment_request_count(team_id)
         except Exception as error:
             logging.error(error)
-            
+
     except Exception as error:
         # Improve error handling
         logging.error(error, exc_info=True)
         return
 
-# Respond to the App Home opened event
+
 @slack_app.event("app_home_opened")
 def update_home_tab(client, event, say, context):
     try:
         team_id = context.get("team_id")
         team_data = get_team_data(team_id)
-        if(event["tab"] == "home" and event["view"] is None):
+        if (event["tab"] == "home" and event["view"] is None):
             say(
                 text=HOME_TAB_MESSAGE,
                 token=team_data["slack_bot_token"]
@@ -231,7 +249,6 @@ def update_home_tab(client, event, say, context):
         current_user = event["user"]
         owner_user = team_data["owner_slack_id"]
 
-        # Get the user's plan information (Replace this with your logic to fetch the user's plan)
         request_count = team_data["request_count"]
         product_name = team_data["product_name"]
         has_free_plan = product_name == "Free plan"
@@ -279,7 +296,7 @@ def update_home_tab(client, event, say, context):
             # Messages count section
             messages_section = {
                 "type": "context",
-                "elements" : [
+                "elements": [
                     {
                         "type": "mrkdwn",
                         "text": f"`{request_count * '█'}{(DAILY_MESSAGE_LIMIT - request_count) * '⁢ ⁢'}`    *{request_count}/{DAILY_MESSAGE_LIMIT} daily messages used*",
@@ -328,30 +345,36 @@ def update_home_tab(client, event, say, context):
         }
 
         # Publish the updated Home Tab view
-        client.views_publish(user_id=event["user"], view=home_tab_content, token=team_data["slack_bot_token"])
+        client.views_publish(
+            user_id=event["user"], view=home_tab_content, token=team_data["slack_bot_token"])
 
     except Exception as e:
         print("Error publishing home tab view:", e)
+
 
 @slack_app.action("go_to_dashboard")
 def handle_some_action(ack, body, logger):
     ack()
     logger.debug(body)
 
+
 @slack_app.action("email_support")
 def handle_some_action(ack, body, logger):
     ack()
     logger.debug(body)
-    
+
+
 @slack_app.action(re.compile("link_to_expert\w*"))
 def handle_some_action(ack, body, logger):
     ack()
     logger.debug(body)
 
+
 @slack_app.action("upgrade_plan")
 def handle_some_action(ack, body, logger):
     ack()
     logger.debug(body)
+
 
 @slack_app.event("message")
 def hande_message_events(body, event, say, logger):
@@ -359,17 +382,22 @@ def hande_message_events(body, event, say, logger):
     if is_direct_message(event) and no_message_changed(event) and event.get("bot_id") is None:
         return handle_message_to_bot(event, say)
     else:
-        threading.Thread(target=handle_semantic_search_update, args=[body]).start()
+        threading.Thread(
+            target=handle_semantic_search_update, args=[body]
+        ).start()
     logger.debug(body)
+
 
 def handle_semantic_search_update(body):
     if not is_smart_search_available(body['team_id']):
         return None
     return handle_message_update_and_reindex(body)
 
+
 @slack_app.event("app_mention")
 def handle_message_events(body, logger):
     logger.debug(body)
+
 
 @slack_app.event("app_uninstalled")
 def handle_app_uninstalled_events(body, logger):
@@ -420,19 +448,19 @@ def handle_member_joined(event, body, logger, context):
     logger.info("Haly was added to a channel, trigger indexing here.")
     trigger_indexation(context['team_id'], context['channel_id'])
 
-def semantic_search_reply_blocks(message, links, experts=[]):
+
+def reply_blocks(message, links=[], experts=[]):
     link_sections = [
         {
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": f"<{link}>"
+                "text": "*Messages used to generate this response:* " + " ".join([f"<{link}|[{index + 1}]>" for index, link in enumerate(links)]),
             }
         }
-        for link in links
-    ]
-    
-    experts_section = [
+    ] if len(links) > 0 else []
+
+    experts = [
         {
             "type": "button",
             "text": {
@@ -444,7 +472,34 @@ def semantic_search_reply_blocks(message, links, experts=[]):
         } for expert in experts
     ]
 
-    return [
+    experts_section = [
+        {
+            "type": "divider"
+        },
+        {
+            "type": "rich_text",
+            "elements": [
+                    {
+                        "type": "rich_text_section",
+                        "elements": [
+                            {
+                                "type": "text",
+                                "text": "Possible Subject Matter Experts",
+                                "style": {
+                                    "bold": True
+                                }
+                            }
+                        ]
+                    }
+            ]
+        },
+        {
+            "type": "actions",
+            "elements": [*experts]
+        }
+    ] if len(experts) > 0 else []
+
+    text_section = [
         {
             "type": "section",
             "text": {
@@ -452,49 +507,10 @@ def semantic_search_reply_blocks(message, links, experts=[]):
                 "text": message
             }
         },
-        {
-            "type": "divider"
-        },
-        {
-            "type": "rich_text",
-            "elements": [
-                {
-                    "type": "rich_text_section",
-                    "elements": [
-                        {
-                            "type": "text",
-                            "text": "Possible Subject Matter Experts",
-                            "style": {
-                                "bold": True
-                            }
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "type": "actions",
-            "elements": [*experts_section]
-        },
-            {
-            "type": "divider"
-        },
-        {
-            "type": "rich_text",
-            "elements": [
-                {
-                    "type": "rich_text_section",
-                    "elements": [
-                        {
-                            "type": "text",
-                            "text": "Messages used to generate this response",
-                            "style": {
-                                "bold": True
-                            }
-                        }
-                    ]
-                }
-            ]
-        },
+    ] if len(message) > 0 else []
+
+    return [
+        *text_section,
+        *experts_section,
         *link_sections,
     ]
