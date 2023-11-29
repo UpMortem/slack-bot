@@ -50,3 +50,7 @@ def get_api_shared_secret() -> str:
 
 def is_standalone() -> bool:
     return os.environ.get('STANDALONE') == 'true'
+
+
+def get_use_fallback() -> bool:
+    return os.environ.get('USE_FALLBACK') == 'true'
