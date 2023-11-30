@@ -26,7 +26,7 @@ def build_links_list(namespace: str, matches) -> str:
         match['metadata']['ts'],
         match['metadata'].get('thread_ts')
     ), matches)
-    return links
+    return list(links)
 
 
 def smart_query(namespace, query, username: str):
