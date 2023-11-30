@@ -6,14 +6,14 @@ from ..config import get_openai_key
 openai.api_key = get_openai_key()
 
 
-@retry(delay=3, backoff=2, tries=8)
+@retry(delay=2, backoff=2, tries=5)
 def create_embedding(text):
     model = "text-embedding-ada-002"
     text = text.replace("\n", " ")
     return openai.Embedding.create(input=[text], model=model)['data'][0]['embedding']
 
 
-@retry(delay=3, backoff=2, tries=8)
+@retry(delay=2, backoff=2, tries=5)
 def create_embeddings(texts: List[str]) -> List[Any]:
     model = "text-embedding-ada-002"
     texts = list(map(lambda text: text.replace("\n", " "), texts))  # explain why we need this
@@ -21,7 +21,7 @@ def create_embeddings(texts: List[str]) -> List[Any]:
     return list(map(lambda e: e.embedding, embeddings['data']))
 
 
-@retry(delay=3, backoff=2, tries=8)
+@retry(delay=2, backoff=2, tries=5)
 def query_chat_gpt_forcing_json(query: str) -> str:
     summary = openai.ChatCompletion.create(
         model="gpt-4-1106-preview",
@@ -31,7 +31,7 @@ def query_chat_gpt_forcing_json(query: str) -> str:
     return summary.choices[0].message.content.strip()
 
 
-@retry(delay=3, backoff=2, tries=8)
+@retry(delay=2, backoff=2, tries=5)
 def query_chat_gpt(query: str) -> str:
     summary = openai.ChatCompletion.create(
         model="gpt-4-1106-preview",
@@ -40,7 +40,7 @@ def query_chat_gpt(query: str) -> str:
     return summary.choices[0].message.content.strip()
 
 
-@retry(delay=3, backoff=2, tries=8)
+@retry(delay=2, backoff=2, tries=5)
 def query_chat_gpt_3_5(query: str) -> str:
     summary = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",

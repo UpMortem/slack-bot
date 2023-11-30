@@ -1,1 +1,1 @@
-web: gunicorn -w 10 -t 8 --timeout 900 -b 0.0.0.0:8080 semantic_search.handle_indexation_tasks:app
+web: gunicorn -w 10 -t 8 --timeout 590 -b 0.0.0.0:8080 semantic_search.handle_indexation_tasks:app
