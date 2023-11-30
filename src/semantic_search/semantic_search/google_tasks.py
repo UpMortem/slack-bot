@@ -1,18 +1,17 @@
 import json
+from typing import Optional
 from uuid import uuid4
 
 from google.cloud import tasks_v2
 
-from .config import index_service_endpoint, get_google_tasks_service_account
+from .config import index_service_endpoint, get_google_tasks_service_account, get_google_tasks_queue_path
 from .load_messages import index_whole_channel
 
 
 def create_http_task_with_token(
-        project: str,
-        location: str,
-        queue: str,
         url: str,
         payload: bytes,
+        queue_path: Optional[str]
 ) -> tasks_v2.Task:
     client = tasks_v2.CloudTasksClient()
     # noinspection PyTypeChecker
@@ -27,10 +26,13 @@ def create_http_task_with_token(
         ),
     )
 
+    if queue_path is None:
+        queue_path = "projects/develop-up/locations/us-central1/queues/semantic-search-index"
+
     # noinspection PyTypeChecker
     return client.create_task(
         tasks_v2.CreateTaskRequest(
-            parent=client.queue_path(project, location, queue),
+            parent=queue_path,
             task=task,
         ),
         timeout=30,
@@ -48,11 +50,9 @@ def trigger_indexation(namespace, channel_id):
 
 def queue_task(payload):
     create_http_task_with_token(
-        'develop-up',
-        'us-central1',
-        'semantic-search-index',
         index_service_endpoint(),
         bytes(json.dumps(payload), 'utf-8'),
+        get_google_tasks_queue_path(),
     )
 
 

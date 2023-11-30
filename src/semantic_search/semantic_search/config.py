@@ -40,6 +40,10 @@ def get_google_tasks_service_account() -> str:
     return os.environ.get('GOOGLE_TASKS_SERVICE_ACCOUNT')
 
 
+def get_google_tasks_queue_path() -> str:
+    return os.environ.get('GOOGLE_TASKS_QUEUE_PATH')
+
+
 def get_api_base_url() -> str:
     return os.environ.get('API_BASE_URL')
 
