@@ -56,16 +56,16 @@ def is_standalone() -> bool:
     return os.environ.get('STANDALONE') == 'true'
 
 def get_postgre_host()-> str :
-    return os.environ.get('POSTGRE_HOST')
+    return os.environ.get('POSTGRES_HOST')
 
 def get_postgre_port()-> str :
-    return os.environ.get('POSTGRE_PORT')
+    return os.environ.get('POSTGRES_PORT')
 
 def get_postgre_database()-> str :
-    return os.environ.get('POSTGRE_DATABASE')
+    return os.environ.get('POSTGRES_DATABASE')
 
 def get_postgre_user()-> str :
-    return os.environ.get('POSTGRE_USER')
+    return os.environ.get('POSTGRES_USER')
 
 def get_postgre_password()-> str :
-    return os.environ.get('POSTGRE_PASSWORD')
+    return os.environ.get('POSTGRES_PASSWORD')

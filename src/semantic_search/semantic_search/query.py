@@ -8,6 +8,8 @@ from .external_services.postgre_vector import get_postgre_cursor
 from .external_services.openai import create_embedding, query_chat_gpt_forcing_json
 import numpy as np
 
+CHUNK_ID = 2
+METADATA = 3
 
 def build_slack_message_link(workspace_name, channel_id, message_timestamp, thread_timestamp=None):
     base_url = f"https://{workspace_name}.slack.com/archives/{channel_id}/"
@@ -46,14 +48,6 @@ def smart_query(namespace, query, username: str):
     get_postgre_cursor().execute('SELECT * FROM embedding ORDER BY values <-> %s LIMIT 50', (np.array(query_vector),))
     query_matches = get_postgre_cursor().fetchall()
 
-    # query(
-    #     queries=[query_vector],
-    #     top_k=50,
-    #     namespace=namespace,
-    #     include_values=False,
-    #     includeMetadata=True
-    # )
-    # query_matches = query_results['results'][0]['matches']
     db_search_time = time.perf_counter() - db_search_start_time
     logging.info(f"Smart Query: Postgre search finished in {round(db_search_time, 2)}s, "
                  f"trace_id = {trace_id}")
@@ -61,10 +55,10 @@ def smart_query(namespace, query, username: str):
     gpt_request_start_time = time.perf_counter()
     messages_for_gpt = []
     for qm in query_matches:
-        metadata = json.loads(qm[3])
+        metadata = json.loads(qm[METADATA])
         messages_for_gpt.append(
             {
-            "id": qm[2],
+            "id": qm[CHUNK_ID],
             "text": metadata["text_without_context"]
             if "text_without_context" in metadata
             else metadata["text"]
@@ -112,7 +106,7 @@ def smart_query(namespace, query, username: str):
         )
         used_messages = list(
             filter(
-                lambda match: match[2]
+                lambda match: match[CHUNK_ID]
                 in result["messages"], query_matches
             )
         )

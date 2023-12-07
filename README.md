@@ -132,6 +132,14 @@ API_BASE_URL=not-needed-for-standalone
 LOG_LEVEL=DEBUG
 STANDALONE=true
 SLACK_USER_ID=U01JZQZQZQZ # Put a your workspace admin user ID if you know it
+
+# POSTGRES
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DATABASE=db-name
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=super-secret
+
 ```
 - Update SLACK_BOT_TOKEN (OAuth token), SLACK_SIGNING_SECRET, OPENAI_API_KEY ([Click here to learn how to get an API key from OpenAI](https://www.maisieai.com/help/how-to-get-an-openai-api-key-for-chatgpt)), and SLACK_USER_ID ([Click here how to get your Slack user ID](https://www.workast.com/help/article/how-to-find-a-slack-user-id/))
 - Have venv installed `python3 -m pip install virtualenv`
