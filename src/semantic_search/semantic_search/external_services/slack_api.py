@@ -114,8 +114,9 @@ def slack_names_map(team_id):
 
 
 def load_previous_messages(team_id: str, channel_id: str, last_message_id: str, number: int):
-    (messages, ) = load_previous_messages_with_pointer(team_id, channel_id, last_message_id, number)
-    return messages[-number:]
+    result = load_previous_messages_with_pointer(team_id, channel_id, last_message_id, number)
+    messages = result[0][-number:]
+    return messages
 
 
 def load_subsequent_messages(team_id: str, channel_id: str, first_message_id: str, number: int):

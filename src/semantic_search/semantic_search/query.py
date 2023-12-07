@@ -4,7 +4,9 @@ import time
 import uuid
 from datetime import date
 from .external_services.pinecone import get_pinecone_index
+from .external_services.postgre_vector import get_postgre_cursor
 from .external_services.openai import create_embedding, query_chat_gpt_forcing_json
+import numpy as np
 
 
 def build_slack_message_link(workspace_name, channel_id, message_timestamp, thread_timestamp=None):
@@ -40,29 +42,35 @@ def smart_query(namespace, query, username: str):
     logging.info(f"Smart Query: embedding created in {round(create_embedding_time, 2)}s, "
                  f"trace_id = {trace_id}")
 
-    pinecone_search_start_time = time.perf_counter()
-    query_results = get_pinecone_index().query(
-        queries=[query_vector],
-        top_k=50,
-        namespace=namespace,
-        include_values=False,
-        includeMetadata=True
-    )
-    query_matches = query_results['results'][0]['matches']
-    pinecone_search_time = time.perf_counter() - pinecone_search_start_time
-    logging.info(f"Smart Query: Pinecone search finished in {round(pinecone_search_time, 2)}s, "
+    db_search_start_time = time.perf_counter()
+    get_postgre_cursor().execute('SELECT * FROM embedding ORDER BY values <-> %s LIMIT 50', (np.array(query_vector),))
+    query_matches = get_postgre_cursor().fetchall()
+
+    # query(
+    #     queries=[query_vector],
+    #     top_k=50,
+    #     namespace=namespace,
+    #     include_values=False,
+    #     includeMetadata=True
+    # )
+    # query_matches = query_results['results'][0]['matches']
+    db_search_time = time.perf_counter() - db_search_start_time
+    logging.info(f"Smart Query: Postgre search finished in {round(db_search_time, 2)}s, "
                  f"trace_id = {trace_id}")
 
     gpt_request_start_time = time.perf_counter()
-    messages_for_gpt = [
-        {
-            "id": qm["id"],
-            "text": qm["metadata"]["text_without_context"]
-            if "text_without_context" in qm["metadata"]
-            else qm["metadata"]["text"]
-        }
-        for qm in query_matches
-    ]
+    messages_for_gpt = []
+    for qm in query_matches:
+        metadata = json.loads(qm[3])
+        messages_for_gpt.append(
+            {
+            "id": qm[2],
+            "text": metadata["text_without_context"]
+            if "text_without_context" in metadata
+            else metadata["text"]
+            }
+        )
+        
     prompt = (f"Act as a Smart Search Engine that can logically infer an answer to the given query. "
               f"Be aware of today's date: {str(date.today())} and use it in your conclusions.\n\n"
               "Here is a list of Slack messages in JSON:\n"
@@ -104,7 +112,7 @@ def smart_query(namespace, query, username: str):
         )
         used_messages = list(
             filter(
-                lambda match: match["id"]
+                lambda match: match[2]
                 in result["messages"], query_matches
             )
         )

@@ -91,6 +91,8 @@ def get_team_subscription(team_id):
 
 # @todo cache results
 def is_smart_search_available(team_id):
+    # if STANDALONE:
+    #    return True
     subscription = get_team_subscription(team_id)
     return subscription["semantic_search_enabled"] is True
 
