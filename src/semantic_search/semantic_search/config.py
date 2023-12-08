@@ -55,17 +55,17 @@ def get_api_shared_secret() -> str:
 def is_standalone() -> bool:
     return os.environ.get('STANDALONE') == 'true'
 
-def get_postgre_host()-> str :
+def get_postgres_host()-> str :
     return os.environ.get('POSTGRES_HOST')
 
-def get_postgre_port()-> str :
+def get_postgres_port()-> str :
     return os.environ.get('POSTGRES_PORT')
 
-def get_postgre_database()-> str :
+def get_postgres_database()-> str :
     return os.environ.get('POSTGRES_DATABASE')
 
-def get_postgre_user()-> str :
+def get_postgres_user()-> str :
     return os.environ.get('POSTGRES_USER')
 
-def get_postgre_password()-> str :
+def get_postgres_password()-> str :
     return os.environ.get('POSTGRES_PASSWORD')

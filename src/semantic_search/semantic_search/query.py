@@ -4,7 +4,7 @@ import time
 import uuid
 from datetime import date
 from .external_services.pinecone import get_pinecone_index
-from .external_services.postgre_vector import get_postgre_cursor
+from .external_services.postgres_vector import get_postgres_cursor
 from .external_services.openai import create_embedding, query_chat_gpt_forcing_json
 import numpy as np
 
@@ -45,8 +45,8 @@ def smart_query(namespace, query, username: str):
                  f"trace_id = {trace_id}")
 
     db_search_start_time = time.perf_counter()
-    get_postgre_cursor().execute('SELECT * FROM embedding ORDER BY values <-> %s LIMIT 50', (np.array(query_vector),))
-    query_matches = get_postgre_cursor().fetchall()
+    get_postgres_cursor().execute('SELECT * FROM embedding ORDER BY values <-> %s LIMIT 50', (np.array(query_vector),))
+    query_matches = get_postgres_cursor().fetchall()
 
     db_search_time = time.perf_counter() - db_search_start_time
     logging.info(f"Smart Query: Postgre search finished in {round(db_search_time, 2)}s, "

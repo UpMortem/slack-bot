@@ -4,7 +4,7 @@ from typing import List, Dict
 
 from .config import CONTEXT_LENGTH
 from .external_services.pinecone import get_pinecone_index
-from .external_services.postgre_vector import get_postgre_cursor, postgre_commit
+from .external_services.postgres_vector import get_postgres_cursor, postgres_commit
 from .external_services.openai import create_embeddings, summarize_thread_with_chat_gpt_3_5
 import datetime
 from .external_services.slack_api import fetch_thread_messages, fetch_channel_messages, is_thread, \
@@ -121,7 +121,7 @@ def attach_header(embeddings: List[Embedding], header: Embedding) -> List[Embedd
     return part_with_header + [embedding.add_header(header) for embedding in part_without_header]
 
 
-def index_messages(channel_id, messages, start_from, postgre_cursor, namespace):
+def index_messages(channel_id, messages, start_from, postgres_cursor, namespace):
     total_messages = len(messages)
 
     logging.info("Replacing User IDs with User Names in the messages")
@@ -167,7 +167,7 @@ def index_messages(channel_id, messages, start_from, postgre_cursor, namespace):
     messages_for_embedding = list(filter(lambda emb_t: len(emb_t.text) != 0, messages_for_embedding))
     logging.info(f"Removed empty messages, {str(len(messages_for_embedding))} messages left")
 
-    insert_db_embeddings(messages_for_embedding, postgre_cursor, namespace)
+    insert_db_embeddings(messages_for_embedding, postgres_cursor, namespace)
 
 
 def index_whole_channel(namespace, channel_id):
@@ -179,10 +179,10 @@ def index_whole_channel(namespace, channel_id):
     total_messages = len(messages)
     logging.info(f"Filtering out service messages, left {str(total_messages)} messages")
 
-    index_messages(channel_id, messages, 0, get_postgre_cursor(), namespace)
+    index_messages(channel_id, messages, 0, get_postgres_cursor(), namespace)
 
 
-def insert_db_embeddings(messages_for_embedding: List[Embedding], postgre_cursor, namespace):
+def insert_db_embeddings(messages_for_embedding: List[Embedding], postgres_cursor, namespace):
     logging.info("Starting embeddings creation for the generated messages")
     chunk_size = 30  # for OpenAI
     embedding_chunks = [messages_for_embedding[i:i + chunk_size] for i in
@@ -196,19 +196,19 @@ def insert_db_embeddings(messages_for_embedding: List[Embedding], postgre_cursor
 
             for i in range(len(chunk)):
                 metadata = json.dumps(chunk[i].to_metadata())
-                postgre_cursor.execute('INSERT INTO embedding (namespace, chunk_id, metadata, values) VALUES (%s, %s, %s, %s)', (namespace, chunk[i].id, metadata, embeddings[i]))
+                postgres_cursor.execute('INSERT INTO embedding (namespace, chunk_id, metadata, values) VALUES (%s, %s, %s, %s)', (namespace, chunk[i].id, metadata, embeddings[i]))
             
-            postgre_commit()
+            postgres_commit()
         except:
             logging.exception("Couldn't insert embeddings")
 
 
-def delete_db_embedding(embeddings: List[Embedding], postgre_cursor, namespace):
+def delete_db_embedding(embeddings: List[Embedding], postgres_cursor, namespace):
     ids = list(map(lambda emb: emb.id, embeddings))
     logging.info(f"Deleting embeddings for {str(ids)}")
     ids_to_delete_str = ", ".join(map(str, ids))
-    postgre_cursor.execute('DELETE FROM embedding WHERE chunk_id IN (%s) AND namespace=%s',(ids_to_delete_str, namespace))
-    postgre_commit()
+    postgres_cursor.execute('DELETE FROM embedding WHERE chunk_id IN (%s) AND namespace=%s',(ids_to_delete_str, namespace))
+    postgres_commit()
 
 def handle_message_update_and_reindex(body):
     event = body['event']
@@ -221,15 +221,15 @@ def handle_message_update_and_reindex(body):
         if not is_actual_message(message):
             return
         embedding = slack_message_to_embedding(channel_id, message)
-        delete_db_embedding([embedding], get_postgre_cursor(), team_id)
+        delete_db_embedding([embedding], get_postgres_cursor(), team_id)
         if message.get('thread_ts') is not None:
             # just reindex the whole thread
-            index_messages(channel_id, load_previous_messages(team_id, channel_id, message.get('thread_ts'), 1), 0, get_postgre_cursor(), team_id)
+            index_messages(channel_id, load_previous_messages(team_id, channel_id, message.get('thread_ts'), 1), 0, get_postgres_cursor(), team_id)
             return
         message_ts = message['ts']
         messages_for_reindex = load_previous_messages(team_id, channel_id, message_ts, CONTEXT_LENGTH - 1) + load_subsequent_messages(team_id, channel_id, message_ts, CONTEXT_LENGTH - 1)
         # reindex surrounding messages
-        index_messages(channel_id, messages_for_reindex, CONTEXT_LENGTH - 1, get_postgre_cursor(), team_id)
+        index_messages(channel_id, messages_for_reindex, CONTEXT_LENGTH - 1, get_postgres_cursor(), team_id)
         return
     if 'subtype' in event and event['subtype'] == 'message_changed':
         # processing a message update
@@ -239,12 +239,12 @@ def handle_message_update_and_reindex(body):
             return
         if message.get('thread_ts') is not None:
             # just reindex the whole thread
-            index_messages(channel_id, load_previous_messages(team_id, channel_id, message.get('thread_ts'), 1), 0, get_postgre_cursor(), team_id)
+            index_messages(channel_id, load_previous_messages(team_id, channel_id, message.get('thread_ts'), 1), 0, get_postgres_cursor(), team_id)
             return
         message_ts = message['ts']
         messages_for_reindex = load_previous_messages(team_id, channel_id, message_ts, CONTEXT_LENGTH) + load_subsequent_messages(team_id, channel_id, message_ts, CONTEXT_LENGTH)[1:]
         # reindex surrounding messages
-        index_messages(channel_id, messages_for_reindex, CONTEXT_LENGTH - 1, get_postgre_cursor(), team_id)
+        index_messages(channel_id, messages_for_reindex, CONTEXT_LENGTH - 1, get_postgres_cursor(), team_id)
         return
     if 'subtype' not in event:
         message = event
@@ -259,7 +259,7 @@ def handle_message_update_and_reindex(body):
     embeddings = generate_embedding_for_message(team_id, channel_id, message_id, thread_ts)
     insert_db_embeddings(
         embeddings,
-        get_postgre_cursor(),
+        get_postgres_cursor(),
         team_id
     )
 

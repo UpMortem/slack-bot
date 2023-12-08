@@ -1,16 +1,16 @@
 from pgvector.psycopg2 import register_vector
 import psycopg2
 
-from ..config import get_postgre_host, get_postgre_port, get_postgre_database, get_postgre_user, get_postgre_password
+from ..config import get_postgres_host, get_postgres_port, get_postgres_database, get_postgres_user, get_postgres_password
 
 conn = None
 try:
     conn = psycopg2.connect(
-        host=get_postgre_host(),
-        database=get_postgre_database(),
-        user=get_postgre_user(),
-        password=get_postgre_password(),
-        port=get_postgre_port())
+        host=get_postgres_host(),
+        database=get_postgres_database(),
+        user=get_postgres_user(),
+        password=get_postgres_password(),
+        port=get_postgres_port())
 
     cur = conn.cursor()
 
@@ -25,14 +25,14 @@ except (Exception, psycopg2.DatabaseError) as error:
     print(error)
 
 
-def get_postgre_cursor():
+def get_postgres_cursor():
     return cur
 
 
-def postgre_commit():
+def postgres_commit():
     if conn is not None:
         conn.commit()
 
-def postgre_excute(postgre_cursor):
+def postgres_excute(postgres_cursor):
     if conn is not None:
-        postgre_cursor.excute(postgre_cursor)
+        postgres_cursor.excute(postgres_cursor)
