@@ -33,6 +33,7 @@ https://haly.ai
 1. You must have a Slack organization where either you or an administrator can approve a new application.
 2. The ability to git clone a repo and run commands in either a Windows, Mac, or Linux terminal.
 3. Install [python](https://www.python.org/downloads/) and [pip](https://pip.pypa.io/en/stable/installation/).
+4. Finally, Install [PostgreSQL](https://www.postgresql.org/download/) and Postgres vector extention using [pgvector](https://github.com/pgvector/pgvector#installation). Additional [Install Methods](https://github.com/pgvector/pgvector#installation) for pgvector.
 
 ### Create your Slack bot:
 1. Go to https://api.slack.com/apps and hit the "Create New App" green button. Select "From an app manifest" option.
@@ -111,9 +112,7 @@ Scroll down further and use [Haly Profile Image](https://github.com/UpMortem/sla
 ![image](https://github.com/UpMortem/slack-bot/assets/5354324/7d866eee-a7e6-4059-b422-bae8ac9016a3)
 
 ***
-6. Finally, Install [PostgreSQL](https://www.postgresql.org/download/) and Postgres vector extention using [pgvector](https://github.com/pgvector/pgvector#installation). Additional [Install Methods](https://github.com/pgvector/pgvector#installation) for pgvector.
 
-***
 
 ### Configure your project
 - In a terminal git clone the project. [See the offical documentation if you do not know how to do this](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository).
