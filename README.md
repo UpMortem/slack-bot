@@ -111,7 +111,9 @@ Scroll down further and use [Haly Profile Image](https://github.com/UpMortem/sla
 ![image](https://github.com/UpMortem/slack-bot/assets/5354324/7d866eee-a7e6-4059-b422-bae8ac9016a3)
 
 ***
-6. Finally, Install PostgreSQL and Postgres vector extention using pgvector. Install [PostgreSQL download](https://www.postgresql.org/download/) Install [vector extension](https://github.com/pgvector/pgvector#installation) or (https://github.com/pgvector/pgvector#installation)
+6. Finally, Install [PostgreSQL](https://www.postgresql.org/download/) and Postgres vector extention using [pgvector](https://github.com/pgvector/pgvector#installation). Additional [Install Methods](https://github.com/pgvector/pgvector#installation) for pgvector.
+
+***
 
 ### Configure your project
 - In a terminal git clone the project. [See the offical documentation if you do not know how to do this](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository).
