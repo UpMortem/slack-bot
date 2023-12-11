@@ -3,13 +3,8 @@ import logging
 import time
 import uuid
 from datetime import date
-from .external_services.pinecone import get_pinecone_index
-from .external_services.postgres_vector import get_postgres_cursor
 from .external_services.openai import create_embedding, query_chat_gpt_forcing_json
-import numpy as np
-
-CHUNK_ID = 2
-METADATA = 3
+from .external_services.vector_databases.vector_instance import get_db_instance
 
 def build_slack_message_link(workspace_name, channel_id, message_timestamp, thread_timestamp=None):
     base_url = f"https://{workspace_name}.slack.com/archives/{channel_id}/"
@@ -45,8 +40,7 @@ def smart_query(namespace, query, username: str):
                  f"trace_id = {trace_id}")
 
     db_search_start_time = time.perf_counter()
-    get_postgres_cursor().execute('SELECT * FROM embedding ORDER BY values <-> %s LIMIT 50', (np.array(query_vector),))
-    query_matches = get_postgres_cursor().fetchall()
+    query_matches = get_db_instance().select(query_vector)
 
     db_search_time = time.perf_counter() - db_search_start_time
     logging.info(f"Smart Query: Postgre search finished in {round(db_search_time, 2)}s, "
@@ -54,17 +48,25 @@ def smart_query(namespace, query, username: str):
 
     gpt_request_start_time = time.perf_counter()
     messages_for_gpt = []
-    for qm in query_matches:
-        metadata = json.loads(qm[METADATA])
-        messages_for_gpt.append(
-            {
-            "id": qm[CHUNK_ID],
-            "text": metadata["text_without_context"]
-            if "text_without_context" in metadata
-            else metadata["text"]
-            }
-        )
-        
+    # for qm in query_matches:
+    #     metadata = json.loads(qm[METADATA])
+    #     messages_for_gpt.append(
+    #         {
+    #         "id": qm[CHUNK_ID],
+    #         "text": metadata["text_without_context"]
+    #         if "text_without_context" in metadata
+    #         else metadata["text"]
+    #         }
+    #     )
+    messages_for_gpt = [
+        {
+            "id": qm["id"],
+            "text": qm["metadata"]["text_without_context"]
+            if "text_without_context" in qm["metadata"]
+            else qm["metadata"]["text"]
+        }
+        for qm in query_matches
+    ]   
     prompt = (f"Act as a Smart Search Engine that can logically infer an answer to the given query. "
               f"Be aware of today's date: {str(date.today())} and use it in your conclusions.\n\n"
               "Here is a list of Slack messages in JSON:\n"
@@ -106,7 +108,7 @@ def smart_query(namespace, query, username: str):
         )
         used_messages = list(
             filter(
-                lambda match: match[CHUNK_ID]
+                lambda match: match["id"]
                 in result["messages"], query_matches
             )
         )
