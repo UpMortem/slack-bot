@@ -47,17 +47,6 @@ def smart_query(namespace, query, username: str):
                  f"trace_id = {trace_id}")
 
     gpt_request_start_time = time.perf_counter()
-    messages_for_gpt = []
-    # for qm in query_matches:
-    #     metadata = json.loads(qm[METADATA])
-    #     messages_for_gpt.append(
-    #         {
-    #         "id": qm[CHUNK_ID],
-    #         "text": metadata["text_without_context"]
-    #         if "text_without_context" in metadata
-    #         else metadata["text"]
-    #         }
-    #     )
     messages_for_gpt = [
         {
             "id": qm["id"],
