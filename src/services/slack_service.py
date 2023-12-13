@@ -405,35 +405,40 @@ def handle_app_uninstalled_events(body, logger):
 
 
 def handle_app_installed(request):
-    team_id = request.form.get("team_id")
-    team_data = get_team_data(team_id)
-    if team_data["slack_bot_token"] is None:
-        logging.info(f"App installed but no token found for team {team_id}")
-    conversation_list = retry(
-        lambda: slack_app.client.conversations_list(
-            token=team_data["slack_bot_token"],
-            types="public_channel",
-            exclude_archived=True,
-            limit=10
+    try:
+        team_id = request.form.get("team_id")
+        team_data = get_team_data(team_id)
+        if team_data["slack_bot_token"] is None:
+            logging.info(
+                f"App installed but no token found for team {team_id}")
+        conversation_list = retry(
+            lambda: slack_app.client.conversations_list(
+                token=team_data["slack_bot_token"],
+                types="public_channel",
+                exclude_archived=True,
+                limit=10
+            )
         )
-    )
-    # send message to general channel
-    for conversation in conversation_list["channels"]:
-        if conversation["is_general"]:
-            retry(
-                lambda: slack_app.client.conversations_join(
-                    token=team_data["slack_bot_token"],
-                    channel=conversation["id"]
+        # send message to general channel
+        for conversation in conversation_list["channels"]:
+            if conversation["is_general"]:
+                retry(
+                    lambda: slack_app.client.conversations_join(
+                        token=team_data["slack_bot_token"],
+                        channel=conversation["id"]
+                    )
                 )
-            )
-            retry(
-                lambda: slack_app.client.chat_postMessage(
-                    token=team_data["slack_bot_token"],
-                    channel=conversation["id"],
-                    text=WELCOME_MESSAGE
+                retry(
+                    lambda: slack_app.client.chat_postMessage(
+                        token=team_data["slack_bot_token"],
+                        channel=conversation["id"],
+                        text=WELCOME_MESSAGE
+                    )
                 )
-            )
-    return "OK"
+        return "OK"
+    except Exception as e:
+        logging.error(e, exc_info=True)
+        return "Error handling app installation", 500
 
 
 @slack_app.event("member_joined_channel")
