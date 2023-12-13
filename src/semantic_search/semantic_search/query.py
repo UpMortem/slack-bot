@@ -3,9 +3,8 @@ import logging
 import time
 import uuid
 from datetime import date
-from .external_services.pinecone import get_pinecone_index
 from .external_services.openai import create_embedding, query_chat_gpt_forcing_json
-
+from .external_services.vector_databases.vector_instance import get_db_instance
 
 def build_slack_message_link(workspace_name, channel_id, message_timestamp, thread_timestamp=None):
     base_url = f"https://{workspace_name}.slack.com/archives/{channel_id}/"
@@ -40,17 +39,11 @@ def smart_query(namespace, query, username: str):
     logging.info(f"Smart Query: embedding created in {round(create_embedding_time, 2)}s, "
                  f"trace_id = {trace_id}")
 
-    pinecone_search_start_time = time.perf_counter()
-    query_results = get_pinecone_index().query(
-        queries=[query_vector],
-        top_k=50,
-        namespace=namespace,
-        include_values=False,
-        includeMetadata=True
-    )
-    query_matches = query_results['results'][0]['matches']
-    pinecone_search_time = time.perf_counter() - pinecone_search_start_time
-    logging.info(f"Smart Query: Pinecone search finished in {round(pinecone_search_time, 2)}s, "
+    db_search_start_time = time.perf_counter()
+    query_matches = get_db_instance().select(query_vector)
+
+    db_search_time = time.perf_counter() - db_search_start_time
+    logging.info(f"Smart Query: Postgre search finished in {round(db_search_time, 2)}s, "
                  f"trace_id = {trace_id}")
 
     gpt_request_start_time = time.perf_counter()
@@ -62,7 +55,7 @@ def smart_query(namespace, query, username: str):
             else qm["metadata"]["text"]
         }
         for qm in query_matches
-    ]
+    ]   
     prompt = (f"Act as a Smart Search Engine that can logically infer an answer to the given query. "
               f"Be aware of today's date: {str(date.today())} and use it in your conclusions.\n\n"
               "Here is a list of Slack messages in JSON:\n"

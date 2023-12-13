@@ -1,15 +1,13 @@
 import logging
 import copy
 from typing import List, Dict
-
 from .config import CONTEXT_LENGTH
-from .external_services.pinecone import get_pinecone_index
 from .external_services.openai import create_embeddings, summarize_thread_with_chat_gpt_3_5
 import datetime
 from .external_services.slack_api import fetch_thread_messages, fetch_channel_messages, is_thread, \
     is_actual_message, \
     slack_names_map, filter_messages, load_previous_messages, load_subsequent_messages
-
+from .external_services.vector_databases.vector_instance import get_db_instance
 
 class Embedding:
     def __init__(self, channel_id, id, text, ts, thread_ts=None, author_id=None):
@@ -118,12 +116,12 @@ def attach_header(embeddings: List[Embedding], header: Embedding) -> List[Embedd
     return part_with_header + [embedding.add_header(header) for embedding in part_without_header]
 
 
-def index_messages(channel_id, messages, start_from, pinecone_index, pinecone_namespace):
+def index_messages(channel_id, messages, start_from, namespace):
     total_messages = len(messages)
 
     logging.info("Replacing User IDs with User Names in the messages")
     embeddings = generate_embeddings(channel_id, messages)
-    embeddings = replace_ids_with_names(embeddings, team_id=pinecone_namespace)
+    embeddings = replace_ids_with_names(embeddings, team_id=namespace)
     embeddings = enrich_with_datetime(embeddings)
     embeddings_without_context = embeddings
     embeddings = enrich_with_adjacent_messages(embeddings)
@@ -135,9 +133,9 @@ def index_messages(channel_id, messages, start_from, pinecone_index, pinecone_na
         if is_thread(message):
             logging.info(
                 f"{counter + 1}/{total_messages} Appending thread messages for {message['ts']} : {message['thread_ts']}")
-            thread_messages = filter_messages(fetch_thread_messages(pinecone_namespace, channel_id, message["thread_ts"]))
+            thread_messages = filter_messages(fetch_thread_messages(namespace, channel_id, message["thread_ts"]))
             thread_embeddings = generate_embeddings(channel_id, thread_messages)
-            thread_embeddings = replace_ids_with_names(thread_embeddings, team_id=pinecone_namespace)
+            thread_embeddings = replace_ids_with_names(thread_embeddings, team_id=namespace)
             thread_embeddings = enrich_with_datetime(thread_embeddings)
             thread_header = thread_embeddings[0]
             raw_messages_for_summary = list(map(lambda e: e.text, thread_embeddings))
@@ -164,54 +162,42 @@ def index_messages(channel_id, messages, start_from, pinecone_index, pinecone_na
     messages_for_embedding = list(filter(lambda emb_t: len(emb_t.text) != 0, messages_for_embedding))
     logging.info(f"Removed empty messages, {str(len(messages_for_embedding))} messages left")
 
-    insert_pinecone_embeddings(messages_for_embedding, pinecone_index, pinecone_namespace)
+    insert_db_embeddings(messages_for_embedding, namespace)
 
 
-def index_whole_channel(pinecone_namespace, channel_id):
+def index_whole_channel(namespace, channel_id):
     logging.info(f"Fetching all messages from {channel_id} channel")
-    messages = list(reversed(fetch_channel_messages(pinecone_namespace, channel_id)))
+    messages = list(reversed(fetch_channel_messages(namespace, channel_id)))
     logging.info(f"Loaded {str(len(messages))} messages")
 
     messages = filter_messages(messages)
     total_messages = len(messages)
     logging.info(f"Filtering out service messages, left {str(total_messages)} messages")
 
-    index_messages(channel_id, messages, 0, get_pinecone_index(), pinecone_namespace)
+    index_messages(channel_id, messages, 0, namespace)
 
 
-def insert_pinecone_embeddings(messages_for_embedding: List[Embedding], pinecone_index, pinecone_namespace):
+def insert_db_embeddings(messages_for_embedding: List[Embedding], namespace):
     logging.info("Starting embeddings creation for the generated messages")
     chunk_size = 30  # for OpenAI
     embedding_chunks = [messages_for_embedding[i:i + chunk_size] for i in
                         range(0, len(messages_for_embedding), chunk_size)]
     counter = 0
     for chunk in embedding_chunks:
-        logging.info(f"Inserting a chunk of Pinecone embeddings: [{counter} - {counter + len(chunk) - 1}]")
+        logging.info(f"Inserting a chunk of Postgre embeddings: [{counter} - {counter + len(chunk) - 1}]")
         counter += len(chunk)
         try:
             embeddings = create_embeddings([embedding_message.text for embedding_message in chunk])
-            items = []
-
-            for i in range(len(chunk)):
-                items.append({
-                    'id': chunk[i].id,
-                    'values': embeddings[i],
-                    'metadata': chunk[i].to_metadata()
-                })
-
-            pinecone_index.upsert(
-                vectors=items,
-                namespace=pinecone_namespace
-            )
+            get_db_instance().insert(embeddings, chunk, namespace)
         except:
             logging.exception("Couldn't insert embeddings")
 
 
-def delete_pinecone_embedding(embeddings: list[Embedding], pinecone_index, pinecone_namespace):
+def delete_db_embedding(embeddings: List[Embedding], namespace):
     ids = list(map(lambda emb: emb.id, embeddings))
     logging.info(f"Deleting embeddings for {str(ids)}")
-    pinecone_index.delete(ids=ids, namespace=pinecone_namespace)
-
+    ids_to_delete_str = ", ".join(map(str, ids))
+    get_db_instance().delete(ids_to_delete_str, namespace)
 
 def handle_message_update_and_reindex(body):
     event = body['event']
@@ -224,15 +210,15 @@ def handle_message_update_and_reindex(body):
         if not is_actual_message(message):
             return
         embedding = slack_message_to_embedding(channel_id, message)
-        delete_pinecone_embedding([embedding], get_pinecone_index(), team_id)
+        delete_db_embedding([embedding], team_id)
         if message.get('thread_ts') is not None:
             # just reindex the whole thread
-            index_messages(channel_id, load_previous_messages(team_id, channel_id, message.get('thread_ts'), 1), 0, get_pinecone_index(), team_id)
+            index_messages(channel_id, load_previous_messages(team_id, channel_id, message.get('thread_ts'), 1), 0, team_id)
             return
         message_ts = message['ts']
         messages_for_reindex = load_previous_messages(team_id, channel_id, message_ts, CONTEXT_LENGTH - 1) + load_subsequent_messages(team_id, channel_id, message_ts, CONTEXT_LENGTH - 1)
         # reindex surrounding messages
-        index_messages(channel_id, messages_for_reindex, CONTEXT_LENGTH - 1, get_pinecone_index(), team_id)
+        index_messages(channel_id, messages_for_reindex, CONTEXT_LENGTH - 1, team_id)
         return
     if 'subtype' in event and event['subtype'] == 'message_changed':
         # processing a message update
@@ -242,12 +228,12 @@ def handle_message_update_and_reindex(body):
             return
         if message.get('thread_ts') is not None:
             # just reindex the whole thread
-            index_messages(channel_id, load_previous_messages(team_id, channel_id, message.get('thread_ts'), 1), 0, get_pinecone_index(), team_id)
+            index_messages(channel_id, load_previous_messages(team_id, channel_id, message.get('thread_ts'), 1), 0, team_id)
             return
         message_ts = message['ts']
         messages_for_reindex = load_previous_messages(team_id, channel_id, message_ts, CONTEXT_LENGTH) + load_subsequent_messages(team_id, channel_id, message_ts, CONTEXT_LENGTH)[1:]
         # reindex surrounding messages
-        index_messages(channel_id, messages_for_reindex, CONTEXT_LENGTH - 1, get_pinecone_index(), team_id)
+        index_messages(channel_id, messages_for_reindex, CONTEXT_LENGTH - 1, team_id)
         return
     if 'subtype' not in event:
         message = event
@@ -260,9 +246,8 @@ def handle_message_update_and_reindex(body):
     if not is_actual_message(message):
         return
     embeddings = generate_embedding_for_message(team_id, channel_id, message_id, thread_ts)
-    insert_pinecone_embeddings(
+    insert_db_embeddings(
         embeddings,
-        get_pinecone_index(),
         team_id
     )
 

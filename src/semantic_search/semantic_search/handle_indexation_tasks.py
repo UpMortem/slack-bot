@@ -3,7 +3,6 @@ import logging
 import os
 from flask import Flask, request, jsonify
 from .config import get_google_tasks_service_account
-from .external_services.pinecone import get_pinecone_index
 from .google_tasks import queue_task
 from .load_messages import index_messages
 from .external_services.slack_api import load_previous_messages_with_pointer
@@ -43,7 +42,7 @@ def handle_task():
         [messages, next_last_message, start_from] = load_previous_messages_with_pointer(namespace, channel_id, last_message_id, BULK_SIZE)
         logging.info(f"Task: {task_id}, Iteration Number: {iteration_number}")
         logging.info(f"Task: {task_id}, Number of Actual Messages: {len(messages)}")
-        index_messages(channel_id, messages, start_from, get_pinecone_index(), namespace)
+        index_messages(channel_id, messages, start_from, namespace)
         if next_last_message is not None:
             queue_task({
                 'task_id': task_id,

@@ -4,3 +4,5 @@ slack-bolt==1.18.0
 openai==0.28
 gunicorn==20.1.0
 replicate==0.18.1
+psycopg[binary]==3.1.14
+psycopg2-binary==2.9.9
