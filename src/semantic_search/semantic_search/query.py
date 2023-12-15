@@ -43,7 +43,7 @@ def smart_query(namespace, query, username: str):
     pinecone_search_start_time = time.perf_counter()
     query_results = get_pinecone_index().query(
         queries=[query_vector],
-        top_k=50,
+        top_k=20,
         namespace=namespace,
         include_values=False,
         includeMetadata=True
