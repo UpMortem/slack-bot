@@ -85,8 +85,8 @@ def smart_query(namespace, query, username: str):
               "answer to the query. Use strong deduction and explain the conclusion. Be as concise as possible.\",\n"
               "   \"answer\": \"Based on the explain and messages_explain fields, generate a short and concise "
               "answer to the query for the end user. Don't include any IDs or other service information.\",\n"
-              "   \"messages\": [ From the messages_explain field pick top 1 or 2 messages that were used to infer "
-              "the answer in the explain field and write their IDs in this array ]\n"
+              "   \"messages\": [ From the messages_explain field pick up to 5 top related messages that were used to "
+              "infer the answer in the explain field and write their IDs in this array ]\n"
               "}")
 
     gpt_response = None
