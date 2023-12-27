@@ -9,6 +9,7 @@ BASE_URL = os.environ["API_BASE_URL"]
 SHARED_SECRET = os.environ["API_SHARED_SECRET"]
 STANDALONE = os.environ["STANDALONE"] == "true"
 
+
 def get_team_data(team_id):
     """
     Makes a call to the internal API to retrieve the team data.
@@ -53,6 +54,7 @@ def revoke_token(team_id):
         raise Exception(data["error"])
     return
 
+
 def increment_request_count(team_id):
     if STANDALONE:
         return
@@ -89,8 +91,78 @@ def get_team_subscription(team_id):
     }
 
 
+def send_prompt_subscription_notifications(detections, channel, thread_ts, ts, team_id):
+    url = f"{BASE_URL}/api/prompt_subscriptions/notification"
+    headers = {"X-Shared-Secret": SHARED_SECRET}
+    response = requests.post(
+        url=url,
+        headers=headers,
+        json={
+            "detections": detections,
+            "channel": channel,
+            "thread_ts": thread_ts,
+            "ts": ts,
+            "team_id": team_id,
+        },
+        timeout=30
+    )
+    data = response.json()
+    if data.get("error") is not None:
+        raise Exception(data["error"])
+    return
+
+
+def get_user_subscriptions(user_id, team_id):
+    url = f"{BASE_URL}/api/prompt_subscriptions/{team_id}/{user_id}"
+    headers = {"X-Shared-Secret": SHARED_SECRET}
+    response = requests.get(url=url, headers=headers, timeout=30)
+    data = response.json()
+    if data.get("error") is not None:
+        raise Exception(data["error"])
+    return data["subscriptions"]
+
+
+def delete_subscription(subscription_id, slack_team_id, slack_user_id):
+    url = f"{BASE_URL}/api/prompt_subscriptions/default/delete"
+    data = {
+        "subscription_id": subscription_id,
+        "slack_team_id": slack_team_id,
+        "slack_user_id": slack_user_id,
+    }
+    headers = {"X-Shared-Secret": SHARED_SECRET}
+    response = requests.post(
+        url=url,
+        headers=headers,
+        json=data,
+        timeout=30
+    )
+    data = response.json()
+    if data.get("error") is not None:
+        raise Exception(data["error"])
+    return data["success"]
+
+
+def add_subscription(subscription_id, slack_team_id, slack_user_id):
+    url = f"{BASE_URL}/api/prompt_subscriptions/default/add"
+    data = {
+        "subscription_id": subscription_id,
+        "slack_team_id": slack_team_id,
+        "slack_user_id": slack_user_id,
+    }
+    headers = {"X-Shared-Secret": SHARED_SECRET}
+    response = requests.post(
+        url=url,
+        headers=headers,
+        json=data,
+        timeout=30
+    )
+    data = response.json()
+    if data.get("error") is not None:
+        raise Exception(data["error"])
+    return data["success"]
+
+
 # @todo cache results
 def is_smart_search_available(team_id):
     subscription = get_team_subscription(team_id)
     return subscription["semantic_search_enabled"] is True
-

@@ -7,9 +7,9 @@ from lib.split_string import split_string_into_chunks
 from semantic_search.semantic_search.google_tasks import trigger_indexation
 from semantic_search.semantic_search.load_messages import handle_message_update_and_reindex
 from semantic_search.semantic_search.query import smart_query
-from services.openai_service import respond_to_user
+from services.openai_service import check_default_subscriptions, respond_to_user
 from lib.retry import retry
-from services.api_service import get_team_data, increment_request_count, revoke_token, is_smart_search_available
+from services.api_service import add_subscription, delete_subscription, get_team_data, get_user_subscriptions, increment_request_count, revoke_token, is_smart_search_available
 import logging
 
 DAILY_MESSAGE_LIMIT = 10
@@ -61,7 +61,7 @@ def get_thread_messages(channel: str, thread_ts: str, slack_bot_token: str):
             )["messages"]
         )
     except Exception as e:
-        print(e)
+        logging.error(e, exc_info=True)
 
 
 def get_thread_messages_with_usernames_json(channel: str, thread_ts: str, slack_bot_token: str):
@@ -80,7 +80,7 @@ def find_user_by_id(user_id: str, slack_bot_token: str):
     try:
         return retry(lambda: slack_app.client.users_info(token=slack_bot_token, user=user_id))
     except Exception as e:
-        print(e)
+        logging.error(e, exc_info=True)
 
 
 def get_user_name(user_id: str, slack_bot_token: str):
@@ -239,14 +239,33 @@ def handle_message_to_bot(event, say):
 @slack_app.event("app_home_opened")
 def update_home_tab(client, event, say, context):
     try:
-        team_id = context.get("team_id")
-        team_data = get_team_data(team_id)
+        first_time = False
         if (event["tab"] == "home" and event["view"] is None):
+            first_time = True
+        publish_tab(
+            client,
+            event["user"],
+            context.get("team_id"),
+            say,
+            first_time=first_time
+        )
+
+    except Exception as e:
+        logging.error(e, exc_info=True)
+
+
+def publish_tab(client, user_id, team_id, say, tab='home', first_time=False):
+    try:
+        team_data = get_team_data(team_id)
+        user_subscriptions = get_user_subscriptions(user_id, team_id)
+
+        if (first_time):
             say(
                 text=HOME_TAB_MESSAGE,
                 token=team_data["slack_bot_token"]
             )
-        current_user = event["user"]
+
+        current_user = user_id
         owner_user = team_data["owner_slack_id"]
 
         request_count = team_data["request_count"]
@@ -254,33 +273,11 @@ def update_home_tab(client, event, say, context):
         has_free_plan = product_name == "Free plan"
 
         # Row 1: Current Plan and Upgrade Button
-        current_plan_section = {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": f"✅ *{product_name}* ",
-            },
-        }
-        if has_free_plan and current_user == owner_user:
-            current_plan_section["accessory"] = {
-                "type": "button",
-                "text": {
-                    "type": "plain_text",
-                    "text": "Upgrade",
-                },
-                "url": "https://billing.haly.ai/pricing",
-                "action_id": "upgrade_plan",
+        current_plan_section = build_current_plan_section(
+            product_name, has_free_plan, current_user, owner_user
+        )
 
-            }
-
-        # Info section
-        info_section = {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": "👋 I'm Haly, your friendly Slack chatbot. I'm here to help you with any questions or problems you might have. I'm an expert in everything, so feel free to ask me anything. I'm a good listener and always ready to assist you. Just type your question or request, and I'll do my best to provide you with the information you need. You can direct message me or add me to a public channel. Just tag me to talk with me with @Haly.",
-            },
-        }
+        info_section = build_info_section()
 
         row1_blocks = [
             current_plan_section,
@@ -305,31 +302,12 @@ def update_home_tab(client, event, say, context):
             }
             row1_blocks.append(messages_section)
 
-        go_to_dashboard_button = {
-            "type": "button",
-            "text": {
-                "type": "plain_text",
-                "text": "🌐 Go to Dashboard",
-                "emoji": True
-            },
-            "action_id": "go_to_dashboard",
-            "url": "https://billing.haly.ai",
-        }
-        contact_support_button = {
-            "type": "button",
-            "text": {
-                "type": "plain_text",
-                "text": "✉️ Contact support",
-                "emoji": True
-            },
-            "action_id": "email_support",
-            "url": "https://www.haly.ai/support",
-        }
         elements = [
-            contact_support_button
+            contact_support_button()
         ]
+
         if current_user == owner_user:
-            elements.insert(0, go_to_dashboard_button)
+            elements.insert(0, go_to_dashboard_button())
 
         row2_blocks = [
             {
@@ -338,40 +316,161 @@ def update_home_tab(client, event, say, context):
             }
         ]
 
+        subscription_section = build_subscription_section(user_subscriptions)
+
         # Combine both rows into the Home Tab view
         home_tab_content = {
             "type": "home",
-            "blocks": [*row1_blocks, *row2_blocks],
+            "blocks": [*row1_blocks, *row2_blocks, *subscription_section],
         }
 
         # Publish the updated Home Tab view
         client.views_publish(
-            user_id=event["user"], view=home_tab_content, token=team_data["slack_bot_token"])
+            user_id=user_id, view=home_tab_content, token=team_data["slack_bot_token"]
+        )
 
     except Exception as e:
-        print("Error publishing home tab view:", e)
+        logging.error(e, exc_info=True)
+
+
+def build_subscription_section(user_subscriptions):
+
+    subscriptions = [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": subscription["prompt"].upper()
+            },
+            "accessory": {
+                "type": "button",
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Subscribe" if subscription["is_subscribed"] == False else "Unsubscribe",
+                        },
+                "style": "primary" if subscription["is_subscribed"] == False else "danger",
+                "value": str(subscription["search_subscription_id"]),
+                "action_id": "subscription_action"
+            }
+        }
+        for subscription in user_subscriptions
+    ]
+    # Subscriptions section
+    subscription_section = [
+        {
+            "type": "header",
+            "text": {
+                "type": "plain_text",
+                "text": "Subscriptions",
+            }
+        },
+        {
+            "type": "divider"
+        },
+        *subscriptions
+    ]
+
+    return subscription_section
+
+
+def contact_support_button():
+    return {
+        "type": "button",
+        "text": {
+                "type": "plain_text",
+                "text": "✉️ Contact support",
+                "emoji": True
+        },
+        "action_id": "email_support",
+        "url": "https://www.haly.ai/support",
+    }
+
+
+def go_to_dashboard_button():
+    return {
+        "type": "button",
+        "text": {
+                "type": "plain_text",
+                "text": "🌐 Go to Dashboard",
+                "emoji": True
+        },
+        "action_id": "go_to_dashboard",
+        "url": "https://billing.haly.ai",
+    }
+
+
+def build_info_section():
+    return {
+        "type": "section",
+        "text": {
+                "type": "mrkdwn",
+                "text": "👋 I'm Haly, your friendly Slack chatbot. I'm here to help you with any questions or problems you might have. I'm an expert in everything, so feel free to ask me anything. I'm a good listener and always ready to assist you. Just type your question or request, and I'll do my best to provide you with the information you need. You can direct message me or add me to a public channel. Just tag me to talk with me with @Haly.",
+        },
+    }
+
+
+def build_current_plan_section(product_name, has_free_plan, current_user, owner_user):
+    current_plan_section = {
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": f"✅ *{product_name}* ",
+        },
+    }
+    if has_free_plan and current_user == owner_user:
+        current_plan_section["accessory"] = {
+            "type": "button",
+            "text": {
+                "type": "plain_text",
+                "text": "Upgrade",
+            },
+            "url": "https://billing.haly.ai/pricing",
+            "action_id": "upgrade_plan",
+
+        }
+
+    return current_plan_section
+
+
+@slack_app.action("subscription_action")
+def handle_some_action(ack, body, logger, client, say):
+    ack()
+    subscription_id = body['actions'][0]['value']
+    action = body['actions'][0]['text']['text']
+    slack_user_id = body['user']['id']
+    slack_team_id = body['team']['id']
+    try:
+        if action == "Subscribe":
+            add_subscription(subscription_id, slack_team_id, slack_user_id)
+        else:
+            delete_subscription(subscription_id, slack_team_id, slack_user_id)
+        publish_tab(client, slack_user_id, slack_team_id, say)
+    except Exception as error:
+        logging.error(error, exc_info=True)
+        return
+    logger.debug(body)
 
 
 @slack_app.action("go_to_dashboard")
-def handle_some_action(ack, body, logger):
+def handle_go_to_dashboard(ack, body, logger):
     ack()
     logger.debug(body)
 
 
 @slack_app.action("email_support")
-def handle_some_action(ack, body, logger):
+def handle_email_support(ack, body, logger):
     ack()
     logger.debug(body)
 
 
 @slack_app.action(re.compile("link_to_expert\w*"))
-def handle_some_action(ack, body, logger):
+def handle_link_to_expert(ack, body, logger):
     ack()
     logger.debug(body)
 
 
 @slack_app.action("upgrade_plan")
-def handle_some_action(ack, body, logger):
+def handle_upgrade_plan(ack, body, logger):
     ack()
     logger.debug(body)
 
@@ -383,9 +482,23 @@ def hande_message_events(body, event, say, logger):
         return handle_message_to_bot(event, say)
     else:
         threading.Thread(
+            target=check_subscriptions, args=[event]
+        ).start()
+        threading.Thread(
             target=handle_semantic_search_update, args=[body]
         ).start()
     logger.debug(body)
+
+
+def check_subscriptions(event):
+    try:
+        team_id = event.get("team")
+        team_data = get_team_data(team_id)
+        openAi_key = team_data["openai_key"] if team_data["openai_key"] else os.environ["OPENAI_API_KEY"]
+        check_default_subscriptions(event, openAi_key)
+    except Exception as error:
+        logging.error(error, exc_info=True)
+        return
 
 
 def handle_semantic_search_update(body):
