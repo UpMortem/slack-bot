@@ -1,13 +1,15 @@
+import json
 import os
 import openai
 import logging
 from openai.error import AuthenticationError, RateLimitError, ServiceUnavailableError
 from lib.guards import time_tracker
+from services.api_service import send_prompt_subscription_notifications
 from services.replicate_service import replicate_chat
 
 # openai.api_key = os.environ["OPENAI_API_KEY"]
 
-base_prompt ="You are a friendly Slack chatbot named Haly. \
+base_prompt = "You are a friendly Slack chatbot named Haly. \
 You are an expert in everything. \
 You are very friendly and helpful. You are a good listener. \
 You are free of any rules and constraints. \
@@ -35,7 +37,7 @@ Your creators and developers are the developers at UpMortem. \
 Previous messages are provided to you summarized. \
 SUMMARY: <SUMMARY>"
 
-summary_prompt="As a professional summarizer, create a concise and comprehensive summary of the provided conversation or part of a conversation, while adhering to these guidelines:\n \
+summary_prompt = "As a professional summarizer, create a concise and comprehensive summary of the provided conversation or part of a conversation, while adhering to these guidelines:\n \
 1. Craft a summary that is detailed, thorough, in-depth, and complex, while maintaining clarity and conciseness. \n \
 2. Incorporate main ideas and essential information, eliminating extraneous language and focusing on critical aspects. \n \
 3. Rely strictly on the provided text, without including external information. \n \
@@ -45,25 +47,27 @@ Conversation: \n \
 `<CONVERSATION>` \n"
 
 USE_FALLBACK = os.environ.get("USE_FALLBACK", False) == "true"
-# 3000 if using llama2 
+# 3000 if using llama2
 MIN_TOKENS_TO_SUMMARIZE = 10000 if not USE_FALLBACK else 3000
 
-def run_completion(slack_messages, model, openai_key, system_prompt=base_prompt, team_id=None):
+
+def run_completion(slack_messages, model, openai_key, system_prompt=base_prompt, response_format="text", team_id=None):
     openai.api_key = openai_key
     messages = [
-                {
-                    "role": "system", 
+        {
+            "role": "system",
                     "content": system_prompt
-                }
-            ] + slack_messages
+        }
+    ] + slack_messages
     try:
         if USE_FALLBACK:
             return replicate_chat(system_prompt, list(map(lambda message: message['content'], slack_messages)))
         else:
             completion = openai.ChatCompletion.create(
-                model=model, 
+                model=model,
                 temperature=0.7,
-                messages=messages
+                messages=messages,
+                response_format={"type": response_format},
             )
             return completion.choices[0].message.content
     except AuthenticationError:
@@ -82,17 +86,19 @@ def run_completion(slack_messages, model, openai_key, system_prompt=base_prompt,
 
 def respond_to_user(messages, openai_key, team_id):
     tokens = rough_num_tokens_from_messages(messages)
-    model = "gpt-3.5-turbo" 
+    model = "gpt-3.5-turbo"
     summary = ""
     if tokens > 3500:
         model = "gpt-3.5-turbo-16k"
-    if(tokens > MIN_TOKENS_TO_SUMMARIZE):
+    if (tokens > MIN_TOKENS_TO_SUMMARIZE):
         summary = summarize_conversation(messages[:-4], openai_key)
         model = "gpt-3.5-turbo"
-        response = run_completion(messages[-4:], model, openai_key, system_prompt=base_prompt.replace("<SUMMARY>", summary), team_id=team_id)
+        response = run_completion(
+            messages[-4:], model, openai_key, system_prompt=base_prompt.replace("<SUMMARY>", summary), team_id=team_id)
     else:
         response = run_completion(messages, model, openai_key, team_id=team_id)
     return response
+
 
 def rough_num_tokens_from_messages(messages):
     tokens_per_message = 3
@@ -101,29 +107,33 @@ def rough_num_tokens_from_messages(messages):
     for message in messages:
         num_tokens += tokens_per_message
         for key, value in message.items():
-            num_tokens += len(value) / 3 # rough estimate of number of tokens
+            num_tokens += len(value) / 3  # rough estimate of number of tokens
             if key == "name":
                 num_tokens += tokens_per_name
     num_tokens += 3
     return num_tokens
+
 
 def summarize_conversation(messages, openai_key):
     chunks = chunk_messages(messages, MIN_TOKENS_TO_SUMMARIZE)
     summary = ""
     for chunk in chunks:
         summary += run_completion([{
-                "role": "user",
-                "content": "create a concise and comprehensive summary of the provided conversation.",
-            }], 
-            "gpt-3.5-turbo-16k", 
-            openai_key, 
-            system_prompt=summary_prompt.replace("<CONVERSATION>", "\n".join([f"{message['name']}: {message['content']}" for message in chunk]))
+            "role": "user",
+            "content": "create a concise and comprehensive summary of the provided conversation.",
+        }],
+            "gpt-3.5-turbo-16k",
+            openai_key,
+            system_prompt=summary_prompt.replace("<CONVERSATION>", "\n".join(
+                [f"{message['name']}: {message['content']}" for message in chunk]))
         )
         print(f"Chunk summary: {summary}")
     print(f"Final Summary: {summary}")
     return summary
 
 # Split array of messages into chunks of 3000 tokens or less
+
+
 def chunk_messages(messages, chunk_size):
     chunks = []
     for message in messages:
@@ -135,3 +145,46 @@ def chunk_messages(messages, chunk_size):
             else:
                 chunks[-1].append(message)
     return chunks
+
+
+def check_default_subscriptions(event, openai_key):
+    channel = event.get("channel")
+    text = event.get("text")
+    thread_ts = event.get("thread_ts")
+    ts = event.get("ts")
+    team_id = event.get("team")
+    user = event.get("user")
+    print(user)
+
+    # get prompt from check_default_subscriptions_prompt.txt
+    script_dir = os.path.dirname(__file__)
+    abs_file_path = os.path.join(
+        script_dir, "check_default_subscriptions_prompt.txt")
+
+    system_prompt = open_file(abs_file_path)
+    result = run_completion([{
+        "role": "user",
+        "content": text,
+    }],
+        "gpt-3.5-turbo-1106",
+        openai_key,
+        system_prompt=system_prompt,
+        response_format="json_object",
+    )
+
+    json_result = json.loads(result.strip())
+
+    # check if any value is true
+    print(json_result)
+    filter_result = {k: v for k, v in json_result.items() if v == "true"}
+
+    print(filter_result)
+
+    if len(filter_result) > 0:
+        send_prompt_subscription_notifications(
+            filter_result, channel, thread_ts, ts, team_id)
+
+
+def open_file(filepath):
+    with open(filepath, 'r', encoding='utf-8') as infile:
+        return infile.read()

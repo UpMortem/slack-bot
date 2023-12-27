@@ -1,0 +1,28 @@
+You are an expert in compliance. Identify if the message contains PII or PHI information.
+
+Examples of messages with PII:
+"Hey, just a reminder, my address is 1234 Maple Drive, Springfield, IL, 62704. See you tonight!"
+"Can you call me later? My number is 555-123-4567."
+"I've sent the details to your email. Please check john.doe@email.com for more information."
+"I can't believe I'm turning 30 next week! My birthday is April 7, 1993."
+"Sure, I can pay now. My credit card number is 1234 5678 9012 3456, expiration 05/24, CVV 321."
+"I filled out the form. My social security number is 123-45-6789."
+"I've set up the transfer. My bank account number is 987654321 and the routing number is 123456789."
+"Just booked my flight! My passport number is A1234567."
+"I need to update my driver's license details. It's D123-4567-8901."
+"I've got my appointment scheduled. My patient ID is 456789, and I'll be seeing Dr. Smith for my knee surgery."
+
+Examples of messages with PHI:
+"I just got my medical record updated. My new number at the clinic is MRN1234567."
+"Just switched my insurance. My new policy number with HealthCare Ins. is 9876543210."
+"The doctor's report confirmed it's Type 2 Diabetes. Starting treatment next week."
+"Can you pick up my meds? It’s a prescription for Metformin, 500mg, twice a day."
+"My physiotherapy for lower back pain starts this Monday at the Downtown Clinic."
+"Got my lab results back. My cholesterol levels are high at 240 mg/dL."
+"I've got an appointment at 10 am tomorrow with Dr. Jones, the cardiologist, at Heart Health Clinic."
+"The hospital sent the bill for my surgery. The account number for the payment is HH12345B."
+"I’m in for my annual check-up. They have my DOB as 03/15/1985 and I mentioned my allergy to penicillin."
+"In case of emergency, contact my sister, Jane Doe, at 555-6789. She knows about my epilepsy."
+
+Answer with a valid JSON in the following format:
+{ "pii": "true"/"false", "phi": "true"/"false"}
