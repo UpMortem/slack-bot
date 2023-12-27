@@ -484,9 +484,9 @@ def hande_message_events(body, event, say, logger):
         threading.Thread(
             target=check_subscriptions, args=[event]
         ).start()
-        # threading.Thread(
-        #     target=handle_semantic_search_update, args=[body]
-        # ).start()
+        threading.Thread(
+            target=handle_semantic_search_update, args=[body]
+        ).start()
     logger.debug(body)
 
 
